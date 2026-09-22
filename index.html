@@ -19,7 +19,7 @@
 </head>
 <body class="pb-32 select-none overflow-x-hidden">
 
-  <!-- Top App Bar -->
+  <!-- Top Navigation Header -->
   <header class="sticky top-0 z-30 bg-[#0d0e15]/95 backdrop-blur px-4 pt-4 pb-2.5 border-b border-white/5">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center space-x-2">
@@ -34,9 +34,11 @@
           Close Windows (<span id="openWindowsCount">0</span>)
         </button>
         
-        <!-- Auth Status Pill -->
-        <button id="authBtn" onclick="toggleAuthModal()" class="text-[11px] bg-[#191b26] hover:bg-[#202333] px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-user text-amber-400 text-xs"></i>
+        <!-- Auth / Profile Status Pill -->
+        <button id="authBtn" onclick="toggleProfileOrAuth()" class="text-[11px] bg-[#191b26] hover:bg-[#202333] px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 transition">
+          <div id="authBtnAvatar" class="w-4 h-4 rounded-full bg-amber-500/20 flex items-center justify-center overflow-hidden">
+            <i class="fa-solid fa-user text-amber-400 text-[9px]"></i>
+          </div>
           <span id="authBtnLabel" class="text-gray-300">Sign In</span>
         </button>
 
@@ -46,8 +48,8 @@
       </div>
     </div>
 
-    <!-- Search & Filter Controls -->
-    <div class="flex items-center gap-2">
+    <!-- Search & Filter Controls (Vault / Market Views) -->
+    <div id="topSearchControls" class="flex items-center gap-2">
       <div class="relative flex-1">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"></i>
         <input id="searchInput" oninput="renderCurrentView()" type="text" placeholder="Search collection or market..."
@@ -63,13 +65,89 @@
     </div>
   </header>
 
-  <!-- Main Grid (Dynamic Vault or Marketplace) -->
+  <!-- Main Viewport Container -->
   <main class="p-3">
+    <!-- Grid View for Vault and Marketplace -->
     <div id="itemsGrid" class="grid grid-cols-3 gap-2.5"></div>
+    
     <div id="emptyState" class="hidden text-center py-16 text-gray-500">
       <i class="fa-solid fa-box-open text-4xl mb-3"></i>
       <p id="emptyStateText" class="text-sm">No lighters found.</p>
     </div>
+
+    <!-- Profile Viewport (Hidden until Profile Nav Clicked) -->
+    <section id="profileViewport" class="hidden space-y-4 pb-12">
+      <!-- Profile Header Banner & Avatar -->
+      <div class="card-surface rounded-2xl overflow-hidden relative border border-white/10">
+        <div id="profileBannerDisplay" class="h-28 bg-gradient-to-r from-amber-900/40 via-purple-950/30 to-[#12131c] relative bg-cover bg-center">
+          <label class="absolute top-2 right-2 bg-black/60 backdrop-blur text-gray-300 hover:text-white px-2 py-1 rounded text-[10px] cursor-pointer flex items-center gap-1 border border-white/15">
+            <i class="fa-solid fa-camera"></i> Change Cover
+            <input type="file" accept="image/*" class="hidden" onchange="uploadProfileMedia(this, 'banner')">
+          </label>
+        </div>
+
+        <div class="px-4 pb-4 pt-0 relative flex flex-col">
+          <div class="flex items-end justify-between -mt-10 mb-2">
+            <div class="relative group">
+              <div id="profileAvatarDisplay" class="w-20 h-20 rounded-full border-4 border-[#191b26] bg-[#12131c] overflow-hidden flex items-center justify-center shadow-xl">
+                <i class="fa-solid fa-user text-3xl text-gray-500"></i>
+              </div>
+              <label class="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs cursor-pointer transition">
+                <i class="fa-solid fa-camera"></i>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadProfileMedia(this, 'avatar')">
+              </label>
+            </div>
+            <button onclick="toggleProfileEditModal()" class="text-xs bg-white/10 hover:bg-white/15 text-gray-200 px-3 py-1.5 rounded-lg border border-white/15 flex items-center gap-1.5">
+              <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+            </button>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="profileUsernameDisplay" class="text-base font-bold text-white">Collector</h2>
+              <span id="profileVisibilityBadge" class="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Public Vault</span>
+            </div>
+            <p id="profileBioDisplay" class="text-xs text-gray-400 mt-0.5">Zippo enthusiast & historic piece curator.</p>
+            <div class="flex items-center gap-4 text-[11px] text-gray-400 mt-2">
+              <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-amber-500"></i> <span id="profileLocationDisplay">Columbus, OH</span></span>
+              <span class="flex items-center gap-1"><i class="fa-solid fa-user-group text-blue-400"></i> <strong id="profileFriendsCount" class="text-white">0</strong> Friends</span>
+              <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-purple-400"></i> <strong id="profileVaultCount" class="text-white">0</strong> Lighters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crown Showcase Shelf -->
+      <div class="card-surface p-3.5 rounded-2xl border border-white/10 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-crown text-amber-400"></i> Crown Showcase (<span id="showcaseCount">0</span>)
+          </span>
+          <span class="text-[10px] text-gray-400 italic">Pinned for public display</span>
+        </div>
+        
+        <div id="showcaseShelfGrid" class="flex gap-2.5 overflow-x-auto pb-1 hide-scrollbar min-h-[90px] items-center">
+          <span class="text-xs text-gray-500 italic py-4">No lighters pinned to showcase yet. Open any lighter in your vault and toggle 'Pin to Showcase'.</span>
+        </div>
+      </div>
+
+      <!-- Collector Activity Ledger Tabs (Listings, Sold, Acquisitions) -->
+      <div class="card-surface rounded-2xl border border-white/10 p-3 space-y-3">
+        <div class="flex bg-[#12131c] p-1 rounded-xl border border-white/10 text-xs font-bold">
+          <button id="ledgerTabListings" onclick="switchLedgerTab('LISTINGS')" class="flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            Active Listings (<span id="ledgerListingsCount">0</span>)
+          </button>
+          <button id="ledgerTabSold" onclick="switchLedgerTab('SOLD')" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white">
+            Sold Backlog (<span id="ledgerSoldCount">0</span>)
+          </button>
+          <button id="ledgerTabBought" onclick="switchLedgerTab('BOUGHT')" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white">
+            Acquisitions (<span id="ledgerBoughtCount">0</span>)
+          </button>
+        </div>
+
+        <div id="ledgerListContainer" class="space-y-2 max-h-[360px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
   </main>
 
   <!-- Dynamic Multi-Window Container -->
@@ -106,24 +184,71 @@
   <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
     <button onclick="loadAppData()" class="flex flex-col items-center text-gray-400 hover:text-white">
       <i class="fa-solid fa-rotate text-sm"></i>
-      <span class="text-[10px] mt-1">Cloud Sync</span>
+      <span class="text-[10px] mt-1">Sync</span>
     </button>
-    <button onclick="switchViewMode('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition">
+    <button onclick="switchMainView('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition">
       <i class="fa-solid fa-boxes-stacked text-sm"></i>
       <span class="text-[10px] mt-1">Vault</span>
     </button>
     <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
       <i class="fa-solid fa-camera text-lg"></i>
     </button>
-    <button onclick="switchViewMode('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition">
+    <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition">
       <i class="fa-solid fa-store text-sm"></i>
       <span class="text-[10px] mt-1">Market</span>
     </button>
-    <button onclick="openCOTYModal()" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition">
-      <i class="fa-solid fa-trophy text-sm"></i>
-      <span class="text-[10px] mt-1">COTY Drops</span>
+    <button onclick="switchMainView('PROFILE')" id="navProfileBtn" class="flex flex-col items-center text-gray-400 hover:text-white transition">
+      <i class="fa-solid fa-user-gear text-sm"></i>
+      <span class="text-[10px] mt-1">Profile</span>
     </button>
   </nav>
+
+  <!-- Profile Settings & Privacy Editor Modal -->
+  <div id="profileEditModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-3">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-amber-400"></i> Profile & Privacy Settings
+        </h3>
+        <button onclick="toggleProfileEditModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase">Collector Handle</label>
+          <input type="text" id="editUsernameInput" class="w-full bg-[#12131c] p-2 rounded text-white border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase">Location</label>
+          <input type="text" id="editLocationInput" placeholder="e.g. Bradford, PA" class="w-full bg-[#12131c] p-2 rounded text-white border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase">Bio / Specialty</label>
+          <textarea id="editBioInput" rows="2" class="w-full bg-[#12131c] p-2 rounded text-white border border-white/10 mt-1"></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-white/10 space-y-2">
+          <div>
+            <label class="block text-[10px] text-amber-400 font-bold uppercase">Vault Visibility Mode</label>
+            <select id="editVaultVisibilityInput" class="w-full bg-[#12131c] p-2 rounded text-white border border-white/10 mt-1 font-semibold">
+              <option value="EVERYONE">Everyone (Public Catalog)</option>
+              <option value="FRIENDS">Friends Only</option>
+              <option value="HIDDEN">Hidden (Completely Private)</option>
+            </select>
+          </div>
+
+          <label class="flex items-center gap-2 cursor-pointer pt-1">
+            <input type="checkbox" id="editAllowOffersInput" class="w-4 h-4 rounded accent-emerald-500">
+            <span class="text-[11px] text-gray-300">Allow other collectors to send offers on unlisted vault items</span>
+          </label>
+        </div>
+
+        <button onclick="saveProfileSettings()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg mt-3">
+          Save Profile Changes
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Marketplace Direct Offer/Inquiry Modal -->
   <div id="inquiryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -145,11 +270,10 @@
       <button id="sendInquiryBtn" onclick="sendInquiryToSeller()" class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold rounded-lg shadow">
         Open Direct Email Draft
       </button>
-      <p class="text-[10px] text-gray-500 text-center">FlameVault direct connect: deals are settled directly between collectors.</p>
     </div>
   </div>
 
-  <!-- Auth Modal (Sign In / Sign Up & OAuth) -->
+  <!-- Auth Modal -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-5 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -159,7 +283,6 @@
         <button onclick="toggleAuthModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Authenticated View -->
       <div id="authLoggedInView" class="hidden space-y-3">
         <div class="bg-[#12131c] p-3 rounded-lg border border-white/5">
           <span class="text-[10px] text-gray-400 uppercase block">Signed In As</span>
@@ -170,14 +293,11 @@
         </button>
       </div>
 
-      <!-- Guest View -->
       <div id="authLoggedOutView" class="space-y-3">
-        <div class="space-y-2">
-          <button onclick="signInWithProvider('google')" class="w-full py-2 bg-white hover:bg-gray-100 text-gray-900 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 shadow transition">
-            <i class="fa-brands fa-google text-red-500"></i>
-            <span>Continue with Google</span>
-          </button>
-        </div>
+        <button onclick="signInWithProvider('google')" class="w-full py-2 bg-white hover:bg-gray-100 text-gray-900 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 shadow transition">
+          <i class="fa-brands fa-google text-red-500"></i>
+          <span>Continue with Google</span>
+        </button>
 
         <div class="flex items-center gap-2 my-2">
           <div class="flex-1 h-px bg-white/10"></div>
@@ -195,41 +315,10 @@
         </div>
 
         <div class="flex gap-2 pt-1">
-          <button id="signInBtn" onclick="handleSignIn()" class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded">
-            Sign In
-          </button>
-          <button id="signUpBtn" onclick="handleSignUp()" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded border border-white/10">
-            Create Account
-          </button>
+          <button id="signInBtn" onclick="handleSignIn()" class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded">Sign In</button>
+          <button id="signUpBtn" onclick="handleSignUp()" class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded border border-white/10">Create Account</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- COTY Archive Modal -->
-  <div id="cotyModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden p-4 border border-white/10 flex flex-col">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <div>
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-trophy text-amber-400"></i> COTY & Limited Drops Archive
-          </h2>
-          <p class="text-[11px] text-gray-400">Official timeline of Collectibles of the Year and numbered limited runs.</p>
-        </div>
-        <button onclick="closeCOTYModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-
-      <div class="flex items-center gap-2 my-3">
-        <input id="cotySearchInput" oninput="renderCOTYArchive()" type="text" placeholder="Search by name, year, or SKU..."
-               class="flex-1 bg-[#12131c] text-xs text-white px-3 py-1.5 rounded-lg border border-white/10 focus:outline-none focus:border-amber-500">
-        <select id="cotyTypeFilter" onchange="renderCOTYArchive()" class="bg-[#12131c] text-xs text-gray-300 py-1.5 px-2 rounded-lg border border-white/10">
-          <option value="ALL">All Releases</option>
-          <option value="COTY">COTY Only</option>
-          <option value="LIMITED">Limited Only</option>
-        </select>
-      </div>
-
-      <div id="cotyList" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
     </div>
   </div>
 
@@ -335,15 +424,32 @@
     </div>
   </div>
 
+  <!-- COTY Archive Modal -->
+  <div id="cotyModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden p-4 border border-white/10 flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-400"></i> COTY & Limited Drops Archive
+        </h2>
+        <button onclick="closeCOTYModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="cotyList" class="flex-1 overflow-y-auto space-y-2.5 my-3 pr-1"></div>
+    </div>
+  </div>
+
   <script>
     const DEFAULT_SUPABASE_URL = "https://qxwdvjwdelnariorfzkx.supabase.co";
     const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4d2R2andkZWxuYXJpb3Jmemt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzM1MDQsImV4cCI6MjEwNTYwOTUwNH0.Ix3HmMICSOPTUv7n0o5vUMSMJ5liFvl8KvGiSf68tyU";
 
     let supabaseClient = null;
     let currentUser = null;
-    let viewMode = 'VAULT'; // 'VAULT' or 'MARKET'
+    let userProfile = null;
+    let viewMode = 'VAULT'; // 'VAULT', 'MARKET', 'PROFILE'
+    let currentLedgerTab = 'LISTINGS';
+
     let myVaultCollection = [];
     let publicMarketCollection = [];
+    let friendsList = [];
     let selectedIds = new Set();
     let highestZIndex = 50;
     let windowCascadeOffset = 0;
@@ -353,28 +459,6 @@
       'gemini-2.5-flash',
       'gemini-3.5-flash',
       'gemini-3.1-pro-preview'
-    ];
-
-    const COTY_ARCHIVE = [
-      { year: 2026, name: "Generations Armor COTY", sku: "47218", type: "COTY", limit: "5,000 Pcs", msrp: "$160.00", estMarket: "$180 - $220", details: "Armor High Polish Black Ice with deep carve geometric lineage patterns and gold-flashed interior." },
-      { year: 2025, name: "Keeper of the Flame 25th Anniversary", sku: "46761", type: "COTY", limit: "4,000 Pcs", msrp: "$150.00", estMarket: "$175 - $210", details: "Modern re-imagination of the 2000 millennium release with 360-degree laser engraving." },
-      { year: 2024, name: "50 Years of Venetian COTY", sku: "46026", type: "COTY", limit: "5,000 Pcs", msrp: "$130.00", estMarket: "$150 - $190", details: "Celebration of the iconic 1974 Florentine floral motif in Armor Black Matte with laser micro-engraving." },
-      { year: 2023, name: "Zippo Car 75th Anniversary COTY", sku: "48691", type: "COTY", limit: "4,500 Pcs", msrp: "$120.00", estMarket: "$110 - $140", details: "High Polish Black with photo-image chrome relief commemorating the 1947 product car." },
-      { year: 2022, name: "90th Anniversary Commemorative COTY", sku: "49867", type: "COTY", limit: "30,000 Pcs", msrp: "$100.00", estMarket: "$115 - $150", details: "Heavy Armor High Polish Black Ice featuring 3D deep carve and commemorative bottom stamp." },
-      { year: 2021, name: "Windproof Lighter 100M Production COTY", sku: "49501", type: "COTY", limit: "21,000 Pcs", msrp: "$95.00", estMarket: "$110 - $135", details: "Armor High Polish Chrome with laser-engraved serialized numbering." },
-      { year: 2020, name: "Z2 Vision Collectible of the Year", sku: "49272", type: "COTY", limit: "20,020 Pcs", msrp: "$100.00", estMarket: "$120 - $160", details: "Black Ice Armor with 360-degree laser engraving and gold-plated insert mechanism." },
-      { year: 2018, name: "Golden Scroll Armor COTY", sku: "29653", type: "COTY", limit: "12,000 Pcs", msrp: "$115.00", estMarket: "$140 - $190", details: "Armor Gold Plate with 360-degree MultiCut deep-carve floral scrollwork." },
-      { year: 2017, name: "85th Anniversary Commemorative", sku: "29442", type: "LIMITED", limit: "12,000 Pcs", msrp: "$100.00", estMarket: "$130 - $170", details: "Armor High Polish Chrome with MultiCut 360 geometric diamond matrix." },
-      { year: 2016, name: "Armor Facet Limited Release", sku: "29151", type: "LIMITED", limit: "13,000 Pcs", msrp: "$100.00", estMarket: "$150 - $210", details: "First lighter to introduce 360 MultiCut deep engraving on Satin Chrome Armor." },
-      { year: 2007, name: "Zippo 75th Anniversary Diamond Set", sku: "24467", type: "LIMITED", limit: "14,000 Pcs", msrp: "$85.00", estMarket: "$175 - $250", details: "High Polish Armor with inlaid Swarovski crystal in commemorative gift tin." },
-      { year: 2002, name: "70th Anniversary 1932-2002 COTY", sku: "20021", type: "COTY", limit: "Numbered Run", msrp: "$65.00", estMarket: "$90 - $130", details: "Brushed brass with pewter commemorative emblem." },
-      { year: 2000, name: "Keeper of the Flame Millennium COTY", sku: "20001", type: "COTY", limit: "Numbered Run", msrp: "$75.00", estMarket: "$110 - $155", details: "Antiqued Brass featuring the mythical Keeper of the Flame time capsule." },
-      { year: 1999, name: "One World, One Future Millennium COTY", sku: "19991", type: "COTY", limit: "Numbered Run", msrp: "$60.00", estMarket: "$85 - $125", details: "Satin chrome with multi-color world globe illustration and commemorative tin." },
-      { year: 1998, name: "Zippo Car Collectible of the Year", sku: "19981", type: "COTY", limit: "Numbered Run", msrp: "$55.00", estMarket: "$95 - $140", details: "Commemorative key ring and tin with the sculpted 1947 Chrysler Zippo Car emblem." },
-      { year: 1995, name: "Mysteries of the Forest 4-Lighter Set", sku: "19954", type: "COTY", limit: "Limited Set", msrp: "$120.00", estMarket: "$250 - $350", details: "First 4-lighter puzzle mural set featuring pristine jaguar and rainforest canopy artwork." },
-      { year: 1994, name: "D-Day 50th Anniversary Allied Heroes", sku: "19941", type: "COTY", limit: "Limited Edition", msrp: "$50.00", estMarket: "$120 - $180", details: "Black crackle finish packaged in authentic round WWII steel rations tin." },
-      { year: 1993, name: "Windy The Varga Girl COTY", sku: "19931", type: "COTY", limit: "Numbered Run", msrp: "$45.00", estMarket: "$100 - $150", details: "High polish brass with antique Windy illustration plaque." },
-      { year: 1992, name: "60th Anniversary (The 1st Official COTY)", sku: "19921", type: "COTY", limit: "1st COTY Issue", msrp: "$40.00", estMarket: "$130 - $200", details: "Midnight Chrome with gold inlaid 60th Anniversary seal; inaugural COTY release." }
     ];
 
     function initSupabase() {
@@ -399,53 +483,65 @@
 
     function updateAuthUI() {
       const authLabel = document.getElementById('authBtnLabel');
+      const authAvatar = document.getElementById('authBtnAvatar');
       const loggedInView = document.getElementById('authLoggedInView');
       const loggedOutView = document.getElementById('authLoggedOutView');
       const currentUserEmail = document.getElementById('currentUserEmail');
 
       if (currentUser) {
-        const shortName = currentUser.email.split('@')[0];
-        authLabel.innerText = shortName;
+        const displayName = (userProfile && userProfile.username) || currentUser.email.split('@')[0];
+        authLabel.innerText = displayName;
         currentUserEmail.innerText = currentUser.email;
         loggedInView.classList.remove('hidden');
         loggedOutView.classList.add('hidden');
+
+        if (userProfile && userProfile.avatar_url) {
+          authAvatar.innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">`;
+        }
       } else {
         authLabel.innerText = "Sign In";
+        authAvatar.innerHTML = `<i class="fa-solid fa-user text-amber-400 text-[9px]"></i>`;
         loggedInView.classList.add('hidden');
         loggedOutView.classList.remove('hidden');
       }
     }
 
-    function toggleAuthModal() {
-      document.getElementById('authModal').classList.toggle('hidden');
+    function toggleProfileOrAuth() {
+      if (currentUser) {
+        switchMainView('PROFILE');
+      } else {
+        toggleAuthModal();
+      }
+    }
+
+    function toggleAuthModal() { document.getElementById('authModal').classList.toggle('hidden'); }
+    function toggleProfileEditModal() { 
+      const modal = document.getElementById('profileEditModal');
+      modal.classList.toggle('hidden');
+      if (userProfile && !modal.classList.contains('hidden')) {
+        document.getElementById('editUsernameInput').value = userProfile.username || '';
+        document.getElementById('editLocationInput').value = userProfile.location || '';
+        document.getElementById('editBioInput').value = userProfile.bio || '';
+        document.getElementById('editVaultVisibilityInput').value = userProfile.vault_visibility || 'EVERYONE';
+        document.getElementById('editAllowOffersInput').checked = userProfile.allow_vault_offers !== false;
+      }
     }
 
     async function signInWithProvider(providerName) {
       if (!supabaseClient) return;
-      try {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: providerName,
-          options: { redirectTo: window.location.href.split('#')[0] }
-        });
-        if (error) throw error;
-      } catch (err) {
-        alert(`Social login error: ${err.message}`);
-      }
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: providerName,
+        options: { redirectTo: window.location.href.split('#')[0] }
+      });
+      if (error) alert(`Login error: ${error.message}`);
     }
 
     async function handleSignIn() {
       const email = document.getElementById('authEmailInput').value.trim();
       const password = document.getElementById('authPasswordInput').value.trim();
-      if (!email || !password) return alert("Please enter both email and password.");
-
-      const btn = document.getElementById('signInBtn');
-      btn.innerText = "Signing in...";
-      btn.disabled = true;
+      if (!email || !password) return alert("Enter both email and password.");
 
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      btn.innerText = "Sign In";
-      btn.disabled = false;
-
       if (error) alert("Sign in failed: " + error.message);
       else toggleAuthModal();
     }
@@ -453,56 +549,80 @@
     async function handleSignUp() {
       const email = document.getElementById('authEmailInput').value.trim();
       const password = document.getElementById('authPasswordInput').value.trim();
-      if (!email || !password) return alert("Please enter both email and password.");
-      if (password.length < 6) return alert("Password must be at least 6 characters.");
-
-      const btn = document.getElementById('signUpBtn');
-      btn.innerText = "Creating...";
-      btn.disabled = true;
+      if (!email || !password) return alert("Enter email and password.");
+      if (password.length < 6) return alert("Password must be 6+ chars.");
 
       const { error } = await supabaseClient.auth.signUp({ email, password });
-      btn.innerText = "Create Account";
-      btn.disabled = false;
-
-      if (error) alert("Account creation error: " + error.message);
-      else {
-        alert("Account created successfully!");
-        toggleAuthModal();
-      }
+      if (error) alert("Account error: " + error.message);
+      else { alert("Account created!"); toggleAuthModal(); }
     }
 
     async function handleSignOut() {
       await supabaseClient.auth.signOut();
       currentUser = null;
+      userProfile = null;
       updateAuthUI();
       toggleAuthModal();
+      switchMainView('VAULT');
       loadAppData();
     }
 
+    // Comprehensive App Data Loader
     async function loadAppData() {
       if (!supabaseClient) return;
 
-      // 1. Fetch My Vault Items
       if (currentUser) {
+        // Fetch User Profile
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (profile) {
+          userProfile = profile;
+        } else {
+          // Initialize empty profile row
+          const initial = {
+            id: currentUser.id,
+            username: currentUser.email.split('@')[0],
+            vault_visibility: 'EVERYONE',
+            allow_vault_offers: true
+          };
+          await supabaseClient.from('profiles').insert([initial]);
+          userProfile = initial;
+        }
+
+        // Fetch Personal Vault
         const { data: vaultData } = await supabaseClient
           .from('lighters')
           .select('*')
           .eq('user_id', currentUser.id)
           .order('created_at', { ascending: false });
         if (vaultData) myVaultCollection = mapRows(vaultData);
+
+        // Fetch Friendships
+        const { data: friends } = await supabaseClient
+          .from('friendships')
+          .select('*')
+          .or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`)
+          .eq('status', 'ACCEPTED');
+        if (friends) friendsList = friends;
+
+        renderProfileView();
       } else {
         myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
       }
 
-      // 2. Fetch Live Community Market Listings
+      // Fetch Global Market Listings
       const { data: marketData } = await supabaseClient
         .from('lighters')
         .select('*')
         .eq('is_listed', true)
         .order('created_at', { ascending: false });
-
       if (marketData) publicMarketCollection = mapRows(marketData);
 
+      updateAuthUI();
       renderCurrentView();
     }
 
@@ -520,10 +640,11 @@
         artwork: row.artwork,
         condition: row.condition,
         price: Number(row.price),
+        status: row.status || 'VAULT',
         isListed: Boolean(row.is_listed),
+        inShowcase: Boolean(row.in_showcase),
         listingPrice: Number(row.listing_price || row.price),
         acceptsTrades: Boolean(row.accepts_trades),
-        sellerContact: row.seller_contact || '',
         frontImg: row.front_img,
         stampImg: row.stamp_img,
         extraImgs: row.extra_imgs || [],
@@ -532,31 +653,59 @@
       }));
     }
 
-    // View Switching: Vault vs Market controlled via bottom nav
-    function switchViewMode(mode) {
+    // View Switching: Vault, Market, Profile
+    function switchMainView(mode) {
       viewMode = mode;
       const navVaultBtn = document.getElementById('navVaultBtn');
       const navMarketBtn = document.getElementById('navMarketBtn');
+      const navProfileBtn = document.getElementById('navProfileBtn');
       const headerBadge = document.getElementById('headerViewBadge');
+      const topSearchControls = document.getElementById('topSearchControls');
+      const itemsGrid = document.getElementById('itemsGrid');
+      const emptyState = document.getElementById('emptyState');
+      const profileViewport = document.getElementById('profileViewport');
       const batchTray = document.getElementById('batchTray');
+
+      // Reset Styles
+      navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
+      navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
+      navProfileBtn.className = "flex flex-col items-center text-gray-400 hover:text-white transition";
 
       if (mode === 'VAULT') {
         navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
-        navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
         headerBadge.innerText = "Vault";
         headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
+        topSearchControls.classList.remove('hidden');
+        itemsGrid.classList.remove('hidden');
+        profileViewport.classList.add('hidden');
         batchTray.classList.remove('hidden');
-      } else {
+        renderCurrentView();
+      } else if (mode === 'MARKET') {
         navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition";
-        navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
-        headerBadge.innerText = "Live Market";
+        headerBadge.innerText = "Marketplace";
         headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
+        topSearchControls.classList.remove('hidden');
+        itemsGrid.classList.remove('hidden');
+        profileViewport.classList.add('hidden');
         batchTray.classList.add('hidden');
+        renderCurrentView();
+      } else if (mode === 'PROFILE') {
+        if (!currentUser) return toggleAuthModal();
+        navProfileBtn.className = "flex flex-col items-center text-white font-semibold transition";
+        headerBadge.innerText = "Profile";
+        headerBadge.className = "text-[10px] font-semibold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full border border-white/20";
+        topSearchControls.classList.add('hidden');
+        itemsGrid.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        profileViewport.classList.remove('hidden');
+        batchTray.classList.add('hidden');
+        renderProfileView();
       }
-      renderCurrentView();
     }
 
     function renderCurrentView() {
+      if (viewMode === 'PROFILE') return;
+
       const grid = document.getElementById('itemsGrid');
       const search = document.getElementById('searchInput').value.toLowerCase();
       const filter = document.getElementById('filterTier').value;
@@ -579,7 +728,7 @@
         emptyState.classList.remove('hidden');
         emptyStateText.innerText = (viewMode === 'VAULT') 
           ? "No lighters in your vault. Tap Scan to add one." 
-          : "No active marketplace listings yet. Open any lighter in your vault and toggle 'List on Market' to create a listing.";
+          : "No active marketplace listings right now.";
       } else {
         emptyState.classList.add('hidden');
       }
@@ -587,7 +736,6 @@
       filtered.forEach(item => {
         const card = document.createElement('div');
         card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative cursor-pointer active:scale-95 transition-transform";
-
         const displayImg = item.frontImg || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
 
         if (viewMode === 'VAULT') {
@@ -599,7 +747,8 @@
           card.innerHTML = `
             <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
               <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
-              ${item.isListed ? `<span class="absolute bottom-1 right-1 bg-emerald-500/90 text-black text-[8px] font-bold px-1 rounded flex items-center gap-0.5"><i class="fa-solid fa-tag"></i> Listed</span>` : ''}
+              ${item.inShowcase ? `<span class="absolute top-1 left-14 bg-amber-500 text-black text-[8px] font-bold px-1 rounded flex items-center gap-0.5"><i class="fa-solid fa-crown text-[7px]"></i> Showcase</span>` : ''}
+              ${item.isListed ? `<span class="absolute bottom-1 right-1 bg-emerald-500/90 text-black text-[8px] font-bold px-1 rounded">Listed</span>` : ''}
               ${item.editionNumber ? `<span class="absolute bottom-1 left-1 bg-amber-500/90 text-black text-[8px] font-mono font-bold px-1 rounded truncate max-w-[85%]">${item.editionNumber}</span>` : ''}
               <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
               <img src="${displayImg}" alt="${item.name}" class="w-full h-full object-cover pointer-events-none">
@@ -611,24 +760,18 @@
             </div>
           `;
         } else {
-          // Market Tile with Comp Comparison Badge
+          // Market View
           const diff = item.listingPrice - item.price;
-          let deltaBadge = '';
-          if (diff < 0) {
-            deltaBadge = `<span class="text-[8px] text-emerald-400 font-bold bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">-$${Math.abs(diff).toFixed(0)} vs comp</span>`;
-          } else if (diff > 0) {
-            deltaBadge = `<span class="text-[8px] text-amber-400 font-bold bg-amber-500/15 px-1 py-0.5 rounded border border-amber-500/30">+$${diff.toFixed(0)}</span>`;
-          } else {
-            deltaBadge = `<span class="text-[8px] text-gray-400 font-bold bg-white/5 px-1 py-0.5 rounded">At Comp</span>`;
-          }
+          const deltaBadge = diff < 0 
+            ? `<span class="text-[8px] text-emerald-400 font-bold bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">-$${Math.abs(diff).toFixed(0)}</span>`
+            : `<span class="text-[8px] text-gray-400 font-bold bg-white/5 px-1 py-0.5 rounded">Comp</span>`;
 
-          // Open Full Buyer Card on Click
           card.addEventListener('click', () => openInspectionWindow(item.id, true));
 
           card.innerHTML = `
             <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
               <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">FOR SALE</span>
-              ${item.acceptsTrades ? `<span class="absolute top-1 right-1 bg-blue-500/80 text-white text-[8px] font-bold px-1 rounded">Trades OK</span>` : ''}
+              ${item.acceptsTrades ? `<span class="absolute top-1 right-1 bg-blue-500/80 text-white text-[8px] font-bold px-1 rounded">Trade OK</span>` : ''}
               <img src="${displayImg}" alt="${item.name}" class="w-full h-full object-cover pointer-events-none">
             </div>
             <div>
@@ -648,7 +791,148 @@
       if (viewMode === 'VAULT') updateBatchTray();
     }
 
-    // Comprehensive Inspection Window for Both Owners (Vault) and Buyers (Market)
+    // Profile View Renderer
+    function renderProfileView() {
+      if (!userProfile) return;
+
+      document.getElementById('profileUsernameDisplay').innerText = userProfile.username || 'Collector';
+      document.getElementById('profileBioDisplay').innerText = userProfile.bio || 'Curating rare Zippos & windproof lighters.';
+      document.getElementById('profileLocationDisplay').innerText = userProfile.location || 'United States';
+      document.getElementById('profileFriendsCount').innerText = friendsList.length;
+      document.getElementById('profileVaultCount').innerText = myVaultCollection.length;
+
+      const visBadge = document.getElementById('profileVisibilityBadge');
+      if (userProfile.vault_visibility === 'EVERYONE') {
+        visBadge.innerText = "Public Vault (Offers Open)";
+        visBadge.className = "text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
+      } else if (userProfile.vault_visibility === 'FRIENDS') {
+        visBadge.innerText = "Friends Only";
+        visBadge.className = "text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20";
+      } else {
+        visBadge.innerText = "Hidden Vault";
+        visBadge.className = "text-[9px] font-bold text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded border border-gray-500/20";
+      }
+
+      if (userProfile.banner_url) {
+        document.getElementById('profileBannerDisplay').style.backgroundImage = `url('${userProfile.banner_url}')`;
+      }
+      if (userProfile.avatar_url) {
+        document.getElementById('profileAvatarDisplay').innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">`;
+      }
+
+      // Render Showcase Shelf
+      const showcaseGrid = document.getElementById('showcaseShelfGrid');
+      const showcaseItems = myVaultCollection.filter(i => i.inShowcase);
+      document.getElementById('showcaseCount').innerText = showcaseItems.length;
+
+      if (showcaseItems.length === 0) {
+        showcaseGrid.innerHTML = `<span class="text-xs text-gray-500 italic py-4">No lighters pinned to showcase yet. Open any lighter in your vault and toggle 'Pin to Showcase'.</span>`;
+      } else {
+        showcaseGrid.innerHTML = '';
+        showcaseItems.forEach(item => {
+          const itemEl = document.createElement('div');
+          itemEl.className = "flex-shrink-0 w-20 bg-[#12131c] rounded-xl p-1.5 border border-white/10 text-center cursor-pointer active:scale-95 transition";
+          itemEl.onclick = () => openInspectionWindow(item.id, false);
+          itemEl.innerHTML = `
+            <img src="${item.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
+            <h5 class="text-[10px] font-bold text-gray-200 truncate">${item.name}</h5>
+            <span class="text-[9px] font-extrabold text-amber-400">$${Number(item.price).toFixed(0)}</span>
+          `;
+          showcaseGrid.appendChild(itemEl);
+        });
+      }
+
+      // Counts for Ledgers
+      document.getElementById('ledgerListingsCount').innerText = myVaultCollection.filter(i => i.isListed).length;
+      document.getElementById('ledgerSoldCount').innerText = myVaultCollection.filter(i => i.status === 'SOLD').length;
+      document.getElementById('ledgerBoughtCount').innerText = myVaultCollection.length;
+
+      renderLedgerList();
+    }
+
+    function switchLedgerTab(tab) {
+      currentLedgerTab = tab;
+      const t1 = document.getElementById('ledgerTabListings');
+      const t2 = document.getElementById('ledgerTabSold');
+      const t3 = document.getElementById('ledgerTabBought');
+
+      t1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      t2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      t3.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+
+      if (tab === 'LISTINGS') t1.className = "flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+      if (tab === 'SOLD') t2.className = "flex-1 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      if (tab === 'BOUGHT') t3.className = "flex-1 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30";
+
+      renderLedgerList();
+    }
+
+    function renderLedgerList() {
+      const container = document.getElementById('ledgerListContainer');
+      container.innerHTML = '';
+      let list = [];
+
+      if (currentLedgerTab === 'LISTINGS') list = myVaultCollection.filter(i => i.isListed);
+      else if (currentLedgerTab === 'SOLD') list = myVaultCollection.filter(i => i.status === 'SOLD');
+      else list = myVaultCollection; // Acquisitions
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-500 py-6 text-center">No records in this ledger.</div>`;
+        return;
+      }
+
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "bg-[#12131c] p-2.5 rounded-xl border border-white/5 flex items-center justify-between";
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <img src="${item.frontImg}" class="w-10 h-10 rounded-lg object-cover bg-black/40">
+            <div class="truncate">
+              <h4 class="text-xs font-bold text-gray-200 truncate">${item.name}</h4>
+              <span class="text-[10px] text-gray-400">${item.year || 'Modern'} • ${item.condition}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-bold text-emerald-400 block">$${Number(currentLedgerTab === 'LISTINGS' ? item.listingPrice : item.price).toFixed(2)}</span>
+            <span class="text-[9px] text-gray-500 uppercase">${currentLedgerTab}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    async function uploadProfileMedia(input, type) {
+      const file = input.files[0];
+      if (!file || !currentUser) return;
+
+      const url = await uploadImageToSupabase(file, `profile_${type}`);
+      if (!url) return;
+
+      const updates = {};
+      if (type === 'banner') updates.banner_url = url;
+      if (type === 'avatar') updates.avatar_url = url;
+
+      await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
+      loadAppData();
+    }
+
+    async function saveProfileSettings() {
+      if (!currentUser) return;
+      const updates = {
+        username: document.getElementById('editUsernameInput').value.trim() || userProfile.username,
+        location: document.getElementById('editLocationInput').value.trim(),
+        bio: document.getElementById('editBioInput').value.trim(),
+        vault_visibility: document.getElementById('editVaultVisibilityInput').value,
+        allow_vault_offers: document.getElementById('editAllowOffersInput').checked,
+        updated_at: new Date().toISOString()
+      };
+
+      await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
+      toggleProfileEditModal();
+      loadAppData();
+    }
+
+    // Inspection Card with Showcase Pinning & Vault Offer Compatibility
     function openInspectionWindow(id, isMarketView = false) {
       const source = isMarketView ? publicMarketCollection : myVaultCollection;
       const item = source.find(i => String(i.id) === String(id));
@@ -686,7 +970,7 @@
         <div class="drag-handle bg-[#12131c] px-3.5 py-2.5 border-b border-white/10 flex items-center justify-between">
           <div class="flex items-center gap-2 overflow-hidden mr-2">
             <i class="fa-solid fa-grip-lines text-gray-500 text-xs"></i>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${isMarketView ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">${isMarketView ? 'MARKET LISTING' : item.tier}</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${isMarketView ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">${isMarketView ? 'MARKETPLACE' : item.tier}</span>
             <span class="text-xs font-bold text-gray-200 truncate">${item.name}</span>
           </div>
           <div class="flex items-center gap-1">
@@ -725,40 +1009,44 @@
       const askingPrice = Number(item.listingPrice || item.price);
       const appraisedPrice = Number(item.price);
       const priceDiff = askingPrice - appraisedPrice;
-      const percentDiff = appraisedPrice > 0 ? ((priceDiff / appraisedPrice) * 100).toFixed(0) : 0;
 
       return `
-        <!-- Conditional Top Banner: Listing Drawer for Owner OR Price Comparison for Buyer -->
+        <!-- Vault Owner Control Bar (Showcase Pin + Marketplace Listing) -->
         ${!isMarketView ? `
-          <div class="bg-gradient-to-r from-emerald-950/30 to-[#12131c] p-3 rounded-xl border border-emerald-500/30 space-y-2">
+          <div class="bg-gradient-to-r from-amber-950/20 via-[#12131c] to-emerald-950/20 p-2.5 rounded-xl border border-white/10 space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
-                <i class="fa-solid fa-store"></i> FlameVault Marketplace
-              </span>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="sr-only peer">
-                <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+              <!-- Showcase Pin Toggle -->
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" onchange="toggleShowcasePin('${item.id}')" ${item.inShowcase ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-amber-500">
+                <span class="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                  <i class="fa-solid fa-crown text-[9px]"></i> Pinned to Showcase
+                </span>
+              </label>
+
+              <!-- Market Listing Toggle -->
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
+                <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                  <i class="fa-solid fa-store text-[9px]"></i> List on Market
+                </span>
               </label>
             </div>
 
-            <div id="listingOptions_${winId}" class="${item.isListed ? '' : 'hidden'} space-y-2 pt-1 border-t border-white/5">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[9px] text-gray-400 uppercase">Asking Price ($)</label>
-                  <input type="number" id="marketPrice_${winId}" value="${item.listingPrice || item.price}" onchange="updateListingPrice('${item.id}', '${winId}')" class="w-full bg-[#0d0e15] text-xs font-bold text-emerald-400 p-1.5 rounded border border-white/10 mt-0.5">
-                </div>
-                <div class="flex flex-col justify-end">
-                  <label class="flex items-center gap-1.5 cursor-pointer pb-2">
-                    <input type="checkbox" id="tradesToggle_${winId}" onchange="updateTradeStatus('${item.id}', '${winId}')" ${item.acceptsTrades ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
-                    <span class="text-[10px] text-gray-300">Accept Trades</span>
-                  </label>
-                </div>
+            <div id="listingOptions_${winId}" class="${item.isListed ? '' : 'hidden'} grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+              <div>
+                <label class="block text-[9px] text-gray-400 uppercase">Asking Price ($)</label>
+                <input type="number" id="marketPrice_${winId}" value="${item.listingPrice || item.price}" onchange="updateListingPrice('${item.id}', '${winId}')" class="w-full bg-[#0d0e15] text-xs font-bold text-emerald-400 p-1.5 rounded border border-white/10 mt-0.5">
               </div>
-              <p class="text-[9px] text-gray-400 italic">Listed on the live community market.</p>
+              <div class="flex flex-col justify-end">
+                <label class="flex items-center gap-1.5 cursor-pointer pb-2">
+                  <input type="checkbox" id="tradesToggle_${winId}" onchange="updateTradeStatus('${item.id}', '${winId}')" ${item.acceptsTrades ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
+                  <span class="text-[10px] text-gray-300">Accept Trades</span>
+                </label>
+              </div>
             </div>
           </div>
         ` : `
-          <!-- Buyer Market Comparison Box -->
+          <!-- Buyer Comparison Card -->
           <div class="bg-gradient-to-r from-[#161a29] to-[#12131c] p-3 rounded-xl border border-emerald-500/40 space-y-2">
             <div class="flex items-center justify-between pb-1.5 border-b border-white/10">
               <span class="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
@@ -769,24 +1057,16 @@
 
             <div class="grid grid-cols-2 gap-3 pt-0.5">
               <div>
-                <span class="text-[9px] text-gray-400 uppercase block">Seller's Asking Price</span>
+                <span class="text-[9px] text-gray-400 uppercase block">Seller Asking Price</span>
                 <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>               </div>               <div>                 <span class="text-[9px] text-gray-400 uppercase block">AI Appraised Comp</span>                 <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
               </div>
             </div>
 
             <div class="text-[10px] pt-1 border-t border-white/5 flex items-center justify-between">
               <span class="text-gray-400">Valuation Spread:</span>
-              ${priceDiff < 0 ? `
-                <span class="font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                  Save $${Math.abs(priceDiff).toFixed(2)} (${Math.abs(percentDiff)}% Below Market Comp)
-                </span>
-              ` : priceDiff > 0 ? `
-                <span class="font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                  +$${priceDiff.toFixed(2)} (${percentDiff}% Premium Over Comp)
-                </span>
-              ` : `
-                <span class="font-bold text-gray-300 bg-white/5 px-1.5 py-0.5 rounded">Exact Fair Market Value</span>
-              `}
+              <span class="font-bold ${priceDiff <= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${priceDiff < 0 ? `Save $${Math.abs(priceDiff).toFixed(2)} (Below Comp)` : priceDiff > 0 ? `+$${priceDiff.toFixed(2)} (Premium)` : 'Fair Comp'}
+              </span>
             </div>
           </div>
         `}
@@ -800,7 +1080,7 @@
           </div>
         ` : ''}
 
-        <!-- Dual Primary Photos -->
+        <!-- Primary Dual Photos -->
         <div class="grid grid-cols-2 gap-2">
           <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
             <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
@@ -841,14 +1121,10 @@
           </div>
         </div>
 
-        <!-- Specifications & Condition Overview -->
         <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div>
-            <div class="flex items-center justify-between">
-              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Year</span>
-              <span class="text-[8px] text-amber-400 font-mono">${item.year || 'Modern'}</span>
-            </div>
-            <span class="text-xs font-bold text-gray-200">${item.tier} Edition</span>
+            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Year</span>
+            <span class="text-xs font-bold text-gray-200">${item.year || 'Modern'} (${item.tier})</span>
           </div>
           <div>
             <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Condition</span>
@@ -856,7 +1132,6 @@
           </div>
         </div>
 
-        <!-- Secondary Market Breakdown & Historical Comps -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
           <h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
             <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Secondary Market Intelligence</span>
@@ -865,31 +1140,11 @@
           <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Valuation derived from eBay sold listings, collector forum benchmarks, and condition assessment.'}</p>
         </div>
 
-        <!-- Bottom Stamp Decoding -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
           <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-calendar-check"></i> Stamp & Date Code Breakdown
           </h4>
           <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
-        </div>
-
-        <!-- Finish & Artwork Specs -->
-        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
-          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-info"></i> Design Specs & Casing
-          </h4>
-          <div>
-            <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
-            <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard catalog release'}</p>
-          </div>
-          <div>
-            <span class="text-[9px] text-gray-400 uppercase block">Finish & Metal:</span>
-            <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
-          </div>
-          <div>
-            <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
-            <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
-          </div>
         </div>
       `;
     }
@@ -940,21 +1195,23 @@
             <label class="block text-[9px] text-gray-400 uppercase">Stamp & Date Breakdown</label>
             <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
           </div>
-          <div>
-            <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
-            <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
-          </div>
-          <div>
-            <label class="block text-[9px] text-gray-400 uppercase">Artwork Details</label>
-            <input type="text" id="edit_artwork_${winId}" value="${item.artwork || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
-          </div>
-
           <div class="flex gap-2 pt-2">
             <button onclick="saveCardEdit('${item.id}', '${winId}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs rounded">Save Changes</button>
             <button onclick="toggleCardEdit('${winId}', '${item.id}')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs rounded">Cancel</button>
           </div>
         </div>
       `;
+    }
+
+    async function toggleShowcasePin(itemId) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      item.inShowcase = !item.inShowcase;
+      if (supabaseClient && currentUser) {
+        await supabaseClient.from('lighters').update({ in_showcase: item.inShowcase }).eq('id', item.id);
+      }
+      loadAppData();
     }
 
     async function toggleListingStatus(itemId, winId) {
@@ -1021,7 +1278,7 @@
         </div>
       `;
 
-      messageInput.value = `Hi! I saw your ${item.name} listed on FlameVault for $${item.listingPrice}. Is this still available?`;
+      messageInput.value = `Hi! I saw your ${item.name} on FlameVault. Would you take $${item.listingPrice}?`;
       modal.classList.remove('hidden');
     }
 
@@ -1061,8 +1318,6 @@
       item.condition = document.getElementById(`edit_condition_${winId}`).value;
       item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
       item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
-      item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
-      item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
 
       if (supabaseClient && currentUser) {
         const payload = {
@@ -1072,9 +1327,7 @@
           tier: item.tier,
           condition: item.condition,
           price: item.price,
-          stamp_details: item.stampDetails,
-          finish: item.finish,
-          artwork: item.artwork
+          stamp_details: item.stampDetails
         };
         await supabaseClient.from('lighters').update(payload).eq('id', item.id);
       }
@@ -1086,7 +1339,7 @@
 
     async function requestMarketValuation(item) {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
-      if (!apiKey) throw new Error("Missing Gemini API Key in Config");
+      if (!apiKey) throw new Error("Missing Gemini API Key");
 
       const prompt = `You are a certified Zippo lighter appraiser.
 Provide an updated secondary market valuation for this lighter:
@@ -1204,13 +1457,7 @@ Respond in raw JSON:
       const item = myVaultCollection.find(i => String(i.id) === String(itemId));
       if (!item) return;
 
-      let photoUrl = null;
-      if (supabaseClient) {
-        photoUrl = await uploadImageToSupabase(file, 'extra');
-      } else {
-        photoUrl = URL.createObjectURL(file);
-      }
-
+      const photoUrl = await uploadImageToSupabase(file, 'extra');
       if (photoUrl) {
         if (!item.extraImgs) item.extraImgs = [];
         item.extraImgs.push(photoUrl);
@@ -1229,7 +1476,6 @@ Respond in raw JSON:
       if (!item || !item.extraImgs) return;
 
       item.extraImgs.splice(photoIndex, 1);
-
       if (supabaseClient && currentUser) {
         await supabaseClient.from('lighters').update({ extra_imgs: item.extraImgs }).eq('id', item.id);
       }
@@ -1269,10 +1515,7 @@ Respond in raw JSON:
 
     function bindDraggable(windowEl, handleEl) {
       let isDragging = false;
-      let startX = 0;
-      let startY = 0;
-      let initialLeft = 0;
-      let initialTop = 0;
+      let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
       function onStart(clientX, clientY) {
         isDragging = true;
@@ -1373,7 +1616,6 @@ Respond in raw JSON:
         const idsToDelete = Array.from(selectedIds);
         await supabaseClient.from('lighters').delete().in('id', idsToDelete);
       }
-
       selectedIds.clear();
       loadAppData();
     }
@@ -1410,22 +1652,14 @@ Respond in raw JSON:
           const img = new Image();
           img.onerror = reject;
           img.onload = () => {
-            let width = img.width;
-            let height = img.height;
+            let width = img.width, height = img.height;
             if (width > height) {
-              if (width > maxDimension) {
-                height = Math.round((height * maxDimension) / width);
-                width = maxDimension;
-              }
+              if (width > maxDimension) { height = Math.round((height * maxDimension) / width); width = maxDimension; }
             } else {
-              if (height > maxDimension) {
-                width = Math.round((width * maxDimension) / height);
-                height = maxDimension;
-              }
+              if (height > maxDimension) { width = Math.round((width * maxDimension) / height); height = maxDimension; }
             }
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             canvas.toBlob((blob) => {
@@ -1476,8 +1710,7 @@ Respond in raw JSON:
 
       try {
         const parts = [];
-        const systemInstruction = `You are a certified Zippo lighter appraiser.
-Analyze the provided images. Return JSON format:
+        const systemInstruction = `You are a certified Zippo lighter appraiser. Return raw JSON:
 {
   "name": "Full Official Model Name",
   "modelNumber": "5-digit catalog number or empty string",
@@ -1593,6 +1826,8 @@ Analyze the provided images. Return JSON format:
             condition,
             price,
             is_listed: false,
+            in_showcase: false,
+            status: 'VAULT',
             listing_price: price,
             front_img: frontImgUrl,
             stamp_img: stampImgUrl,
@@ -1616,38 +1851,8 @@ Analyze the provided images. Return JSON format:
       }
     }
 
-    function openCOTYModal() {
-      document.getElementById('cotyModal').classList.remove('hidden');
-      renderCOTYArchive();
-    }
-
+    function openCOTYModal() { document.getElementById('cotyModal').classList.remove('hidden'); }
     function closeCOTYModal() { document.getElementById('cotyModal').classList.add('hidden'); }
-
-    function renderCOTYArchive() {
-      const listEl = document.getElementById('cotyList');
-      const search = (document.getElementById('cotySearchInput').value || '').toLowerCase();
-      const typeFilter = document.getElementById('cotyTypeFilter').value;
-
-      listEl.innerHTML = '';
-      const filtered = COTY_ARCHIVE.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(search) || String(item.year).includes(search);
-        const matchesType = (typeFilter === 'ALL') || (item.type === typeFilter);
-        return matchesSearch && matchesType;
-      });
-
-      filtered.forEach(item => {
-        const row = document.createElement('div');
-        row.className = "bg-[#12131c] rounded-xl p-3 border border-white/5 flex flex-col space-y-1.5";
-        row.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.year} - ${item.name}</span>
-            <span class="text-[10px] text-emerald-400 font-bold">${item.estMarket}</span>
-          </div>
-          <p class="text-xs text-gray-400 leading-relaxed">${item.details}</p>
-        `;
-        listEl.appendChild(row);
-      });
-    }
 
     initSupabase();
   </script>
