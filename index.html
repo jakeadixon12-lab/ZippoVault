@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ZippoVault</title>
+  <title>FlameVault</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,11 +20,14 @@
 <body class="pb-32 select-none overflow-x-hidden">
 
   <!-- Top App Bar -->
-  <header class="sticky top-0 z-30 bg-[#0d0e15]/95 backdrop-blur px-4 pt-4 pb-2 border-b border-white/5">
+  <header class="sticky top-0 z-30 bg-[#0d0e15]/95 backdrop-blur px-4 pt-4 pb-2.5 border-b border-white/5">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center space-x-2">
         <i class="fa-solid fa-fire text-amber-500 text-lg"></i>
-        <h1 class="text-xl font-bold tracking-tight text-white">FlameVault</h1>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+          FlameVault
+          <span id="headerViewBadge" class="text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Vault</span>
+        </h1>
       </div>
       <div class="flex items-center gap-2">
         <button id="closeAllWindowsBtn" onclick="closeAllInspectionWindows()" class="hidden text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30">
@@ -41,16 +44,6 @@
           <i class="fa-solid fa-gear text-lg"></i>
         </button>
       </div>
-    </div>
-
-    <!-- Segmented Tab: My Vault vs. Live Marketplace (Courtyard Style) -->
-    <div class="flex bg-[#12131c] p-1 rounded-xl border border-white/10 mb-2.5">
-      <button id="tabVaultBtn" onclick="switchViewMode('VAULT')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-amber-500 text-black shadow transition">
-        <i class="fa-solid fa-boxes-stacked mr-1"></i> My Vault (<span id="vaultCountLabel">0</span>)
-      </button>
-      <button id="tabMarketBtn" onclick="switchViewMode('MARKET')" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition">
-        <i class="fa-solid fa-store mr-1"></i> Live Market (<span id="marketCountLabel">0</span>)
-      </button>
     </div>
 
     <!-- Search & Filter Controls -->
@@ -70,7 +63,7 @@
     </div>
   </header>
 
-  <!-- Main Grid (Switches dynamically between Vault and Market) -->
+  <!-- Main Grid (Dynamic Vault or Marketplace) -->
   <main class="p-3">
     <div id="itemsGrid" class="grid grid-cols-3 gap-2.5"></div>
     <div id="emptyState" class="hidden text-center py-16 text-gray-500">
@@ -82,7 +75,7 @@
   <!-- Dynamic Multi-Window Container -->
   <div id="floatingWindowsContainer" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
 
-  <!-- Adaptive Bottom Tray -->
+  <!-- Adaptive Bottom Tray (Active on Vault tab only) -->
   <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 px-4 py-2.5 flex items-center justify-between z-20 transition-all">
     <div class="flex items-center gap-2">
       <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
@@ -115,24 +108,24 @@
       <i class="fa-solid fa-rotate text-sm"></i>
       <span class="text-[10px] mt-1">Cloud Sync</span>
     </button>
-    <button onclick="switchViewMode('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold">
+    <button onclick="switchViewMode('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition">
       <i class="fa-solid fa-boxes-stacked text-sm"></i>
       <span class="text-[10px] mt-1">Vault</span>
     </button>
     <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
       <i class="fa-solid fa-camera text-lg"></i>
     </button>
-    <button onclick="switchViewMode('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400">
+    <button onclick="switchViewMode('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition">
       <i class="fa-solid fa-store text-sm"></i>
       <span class="text-[10px] mt-1">Market</span>
     </button>
-    <button onclick="openCOTYModal()" class="flex flex-col items-center text-gray-400 hover:text-amber-400">
+    <button onclick="openCOTYModal()" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition">
       <i class="fa-solid fa-trophy text-sm"></i>
       <span class="text-[10px] mt-1">COTY Drops</span>
     </button>
   </nav>
 
-  <!-- Marketplace Inquiry Modal -->
+  <!-- Marketplace Direct Offer/Inquiry Modal -->
   <div id="inquiryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-3">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -142,9 +135,7 @@
         <button onclick="closeInquiryModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div id="inquiryItemSummary" class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 flex gap-3 items-center">
-        <!-- Injected by JS -->
-      </div>
+      <div id="inquiryItemSummary" class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 flex gap-3 items-center"></div>
 
       <div>
         <label class="block text-[10px] text-gray-400 uppercase tracking-wider mb-1">Your Offer / Message</label>
@@ -162,7 +153,7 @@
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-5 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <h3 id="authModalTitle" class="text-sm font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-user-shield text-amber-500"></i> Collector Account
         </h3>
         <button onclick="toggleAuthModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -333,14 +324,14 @@
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
-        <h3 class="text-sm font-bold text-white">Cloud & API Config</h3>
+        <h3 class="text-sm font-bold text-white">Config</h3>
         <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
         <label class="block text-xs text-gray-400 mb-1">Gemini API Key</label>
         <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
       </div>
-      <button onclick="saveAllSettings()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Credentials</button>
+      <button onclick="saveAllSettings()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Key</button>
     </div>
   </div>
 
@@ -488,7 +479,6 @@
       loadAppData();
     }
 
-    // Load both personal inventory & live community listings
     async function loadAppData() {
       if (!supabaseClient) return;
 
@@ -512,9 +502,6 @@
         .order('created_at', { ascending: false });
 
       if (marketData) publicMarketCollection = mapRows(marketData);
-
-      document.getElementById('vaultCountLabel').innerText = myVaultCollection.length;
-      document.getElementById('marketCountLabel').innerText = publicMarketCollection.length;
 
       renderCurrentView();
     }
@@ -545,21 +532,26 @@
       }));
     }
 
-    // View Switching: Vault vs Market
+    // View Switching: Vault vs Market controlled via bottom nav
     function switchViewMode(mode) {
       viewMode = mode;
-      const tabVaultBtn = document.getElementById('tabVaultBtn');
-      const tabMarketBtn = document.getElementById('tabMarketBtn');
+      const navVaultBtn = document.getElementById('navVaultBtn');
+      const navMarketBtn = document.getElementById('navMarketBtn');
+      const headerBadge = document.getElementById('headerViewBadge');
       const batchTray = document.getElementById('batchTray');
 
       if (mode === 'VAULT') {
-        tabVaultBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-amber-500 text-black shadow transition";
-        tabMarketBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition";
+        navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
+        navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
+        headerBadge.innerText = "Vault";
+        headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
         batchTray.classList.remove('hidden');
       } else {
-        tabMarketBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-emerald-500 text-black shadow transition";
-        tabVaultBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition";
-        batchTray.classList.add('hidden'); // Batch tray is only for personal inventory
+        navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition";
+        navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
+        headerBadge.innerText = "Live Market";
+        headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
+        batchTray.classList.add('hidden');
       }
       renderCurrentView();
     }
@@ -587,7 +579,7 @@
         emptyState.classList.remove('hidden');
         emptyStateText.innerText = (viewMode === 'VAULT') 
           ? "No lighters in your vault. Tap Scan to add one." 
-          : "No active marketplace listings yet. Toggle 'List on Market' inside any of your lighter cards to list the first one!";
+          : "No active marketplace listings yet. Open any lighter in your vault and toggle 'List on Market' to create a listing.";
       } else {
         emptyState.classList.add('hidden');
       }
@@ -599,10 +591,9 @@
         const displayImg = item.frontImg || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
 
         if (viewMode === 'VAULT') {
-          // Vault Card View
           const isChecked = selectedIds.has(item.id);
           card.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') openInspectionWindow(item.id);
+            if (e.target.tagName !== 'INPUT') openInspectionWindow(item.id, false);
           });
 
           card.innerHTML = `
@@ -620,7 +611,7 @@
             </div>
           `;
         } else {
-          // Courtyard-Style Live Marketplace Card View
+          // Market Tile with Comp Comparison Badge
           const diff = item.listingPrice - item.price;
           let deltaBadge = '';
           if (diff < 0) {
@@ -631,7 +622,8 @@
             deltaBadge = `<span class="text-[8px] text-gray-400 font-bold bg-white/5 px-1 py-0.5 rounded">At Comp</span>`;
           }
 
-          card.addEventListener('click', () => openMarketInquiry(item));
+          // Open Full Buyer Card on Click
+          card.addEventListener('click', () => openInspectionWindow(item.id, true));
 
           card.innerHTML = `
             <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
@@ -656,9 +648,10 @@
       if (viewMode === 'VAULT') updateBatchTray();
     }
 
-    // Floating Window Detail Card with Built-In "List on Market" Controls
-    function openInspectionWindow(id) {
-      const item = myVaultCollection.find(i => String(i.id) === String(id));
+    // Comprehensive Inspection Window for Both Owners (Vault) and Buyers (Market)
+    function openInspectionWindow(id, isMarketView = false) {
+      const source = isMarketView ? publicMarketCollection : myVaultCollection;
+      const item = source.find(i => String(i.id) === String(id));
       if (!item) return;
 
       const container = document.getElementById('floatingWindowsContainer');
@@ -671,38 +664,40 @@
 
       const windowEl = document.createElement('div');
       windowEl.id = winId;
-      windowEl.className = "pointer-events-auto absolute w-[90vw] max-w-[360px] bg-[#191b26] rounded-2xl shadow-2xl border border-white/20 flex flex-col max-h-[85vh] overflow-hidden select-none transition-shadow";
+      windowEl.className = "pointer-events-auto absolute w-[92vw] max-w-[375px] bg-[#191b26] rounded-2xl shadow-2xl border border-white/20 flex flex-col max-h-[85vh] overflow-hidden select-none transition-shadow";
       windowEl.style.zIndex = highestZIndex;
       windowEl.style.top = `${baseTop}px`;
-      windowEl.style.left = `${Math.min(baseLeft, window.innerWidth - 370 > 0 ? window.innerWidth - 370 : 15)}px`;
+      windowEl.style.left = `${Math.min(baseLeft, window.innerWidth - 385 > 0 ? window.innerWidth - 385 : 15)}px`;
 
       windowEl.addEventListener('mousedown', () => bringWindowToFront(windowEl));
       windowEl.addEventListener('touchstart', () => bringWindowToFront(windowEl));
 
-      renderWindowContent(windowEl, winId, item, false);
+      renderWindowContent(windowEl, winId, item, false, isMarketView);
 
       container.appendChild(windowEl);
       bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
       updateWindowCountBadge();
     }
 
-    function renderWindowContent(windowEl, winId, item, isEditing) {
+    function renderWindowContent(windowEl, winId, item, isEditing, isMarketView = false) {
       const extraImages = item.extraImgs || [];
 
       windowEl.innerHTML = `
         <div class="drag-handle bg-[#12131c] px-3.5 py-2.5 border-b border-white/10 flex items-center justify-between">
           <div class="flex items-center gap-2 overflow-hidden mr-2">
             <i class="fa-solid fa-grip-lines text-gray-500 text-xs"></i>
-            <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30 uppercase">${item.tier}</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${isMarketView ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">${isMarketView ? 'MARKET LISTING' : item.tier}</span>
             <span class="text-xs font-bold text-gray-200 truncate">${item.name}</span>
           </div>
           <div class="flex items-center gap-1">
-            <button onclick="reappraiseSingleLighter('${item.id}', '${winId}')" title="Re-Appraise Market Value" class="text-gray-400 hover:text-emerald-400 p-1 text-xs">
-              <i class="fa-solid fa-arrows-rotate"></i>
-            </button>
-            <button onclick="toggleCardEdit('${winId}', '${item.id}')" title="Edit Lighter" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
-              <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen-to-square'}"></i>
-            </button>
+            ${!isMarketView ? `
+              <button onclick="reappraiseSingleLighter('${item.id}', '${winId}')" title="Re-Appraise Market Value" class="text-gray-400 hover:text-emerald-400 p-1 text-xs">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+              <button onclick="toggleCardEdit('${winId}', '${item.id}')" title="Edit Lighter" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
+                <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen-to-square'}"></i>
+              </button>
+            ` : ''}
             <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
               <i class="fa-solid fa-xmark text-sm"></i>
             </button>
@@ -710,45 +705,91 @@
         </div>
 
         <div class="p-3.5 overflow-y-auto space-y-3">
-          ${isEditing ? renderEditForm(item, winId) : renderViewContent(item, winId, extraImages)}
+          ${isEditing ? renderEditForm(item, winId) : renderViewContent(item, winId, extraImages, isMarketView)}
         </div>
+
+        ${isMarketView ? `
+          <div class="p-3 bg-[#12131c] border-t border-white/10">
+            <button onclick="openMarketInquiryById('${item.id}')" class="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold text-xs rounded-lg shadow-lg flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i> Contact Seller / Make Offer
+            </button>
+          </div>
+        ` : ''}
       `;
 
       bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
     }
 
-    function renderViewContent(item, winId, extraImages) {
+    function renderViewContent(item, winId, extraImages, isMarketView = false) {
       const appraisalDate = item.lastAppraisedAt ? new Date(item.lastAppraisedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Initial Scan';
+      const askingPrice = Number(item.listingPrice || item.price);
+      const appraisedPrice = Number(item.price);
+      const priceDiff = askingPrice - appraisedPrice;
+      const percentDiff = appraisedPrice > 0 ? ((priceDiff / appraisedPrice) * 100).toFixed(0) : 0;
 
       return `
-        <!-- FlameVault Market Listing Drawer -->
-        <div class="bg-gradient-to-r from-emerald-950/30 to-[#12131c] p-3 rounded-xl border border-emerald-500/30 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-store"></i> FlameVault Marketplace
-            </span>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="sr-only peer">
-              <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
-            </label>
-          </div>
+        <!-- Conditional Top Banner: Listing Drawer for Owner OR Price Comparison for Buyer -->
+        ${!isMarketView ? `
+          <div class="bg-gradient-to-r from-emerald-950/30 to-[#12131c] p-3 rounded-xl border border-emerald-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-store"></i> FlameVault Marketplace
+              </span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="sr-only peer">
+                <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
 
-          <div id="listingOptions_${winId}" class="${item.isListed ? '' : 'hidden'} space-y-2 pt-1 border-t border-white/5">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[9px] text-gray-400 uppercase">Asking Price ($)</label>
-                <input type="number" id="marketPrice_${winId}" value="${item.listingPrice || item.price}" onchange="updateListingPrice('${item.id}', '${winId}')" class="w-full bg-[#0d0e15] text-xs font-bold text-emerald-400 p-1.5 rounded border border-white/10 mt-0.5">
+            <div id="listingOptions_${winId}" class="${item.isListed ? '' : 'hidden'} space-y-2 pt-1 border-t border-white/5">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[9px] text-gray-400 uppercase">Asking Price ($)</label>
+                  <input type="number" id="marketPrice_${winId}" value="${item.listingPrice || item.price}" onchange="updateListingPrice('${item.id}', '${winId}')" class="w-full bg-[#0d0e15] text-xs font-bold text-emerald-400 p-1.5 rounded border border-white/10 mt-0.5">
+                </div>
+                <div class="flex flex-col justify-end">
+                  <label class="flex items-center gap-1.5 cursor-pointer pb-2">
+                    <input type="checkbox" id="tradesToggle_${winId}" onchange="updateTradeStatus('${item.id}', '${winId}')" ${item.acceptsTrades ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
+                    <span class="text-[10px] text-gray-300">Accept Trades</span>
+                  </label>
+                </div>
               </div>
-              <div class="flex flex-col justify-end">
-                <label class="flex items-center gap-1.5 cursor-pointer pb-2">
-                  <input type="checkbox" id="tradesToggle_${winId}" onchange="updateTradeStatus('${item.id}', '${winId}')" ${item.acceptsTrades ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
-                  <span class="text-[10px] text-gray-300">Accept Trades</span>
-                </label>
+              <p class="text-[9px] text-gray-400 italic">Listed on the live community market.</p>
+            </div>
+          </div>
+        ` : `
+          <!-- Buyer Market Comparison Box -->
+          <div class="bg-gradient-to-r from-[#161a29] to-[#12131c] p-3 rounded-xl border border-emerald-500/40 space-y-2">
+            <div class="flex items-center justify-between pb-1.5 border-b border-white/10">
+              <span class="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-scale-balanced"></i> Listing vs. Fair Market Appraisal
+              </span>
+              ${item.acceptsTrades ? `<span class="text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-bold border border-blue-500/30">Accepts Trades</span>` : ''}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-0.5">
+              <div>
+                <span class="text-[9px] text-gray-400 uppercase block">Seller's Asking Price</span>
+                <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>               </div>               <div>                 <span class="text-[9px] text-gray-400 uppercase block">AI Appraised Comp</span>                 <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
               </div>
             </div>
-            <p class="text-[9px] text-gray-400 italic">Visible on the public Live Market board.</p>
+
+            <div class="text-[10px] pt-1 border-t border-white/5 flex items-center justify-between">
+              <span class="text-gray-400">Valuation Spread:</span>
+              ${priceDiff < 0 ? `
+                <span class="font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  Save $${Math.abs(priceDiff).toFixed(2)} (${Math.abs(percentDiff)}% Below Market Comp)
+                </span>
+              ` : priceDiff > 0 ? `
+                <span class="font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                  +$${priceDiff.toFixed(2)} (${percentDiff}% Premium Over Comp)
+                </span>
+              ` : `
+                <span class="font-bold text-gray-300 bg-white/5 px-1.5 py-0.5 rounded">Exact Fair Market Value</span>
+              `}
+            </div>
           </div>
-        </div>
+        `}
 
         ${item.editionNumber ? `
           <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
@@ -759,6 +800,7 @@
           </div>
         ` : ''}
 
+        <!-- Dual Primary Photos -->
         <div class="grid grid-cols-2 gap-2">
           <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
             <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
@@ -770,37 +812,43 @@
           </div>
         </div>
 
+        <!-- Extra Photos Gallery -->
         <div class="bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-[9px] uppercase font-bold text-gray-400 flex items-center gap-1">
               <i class="fa-solid fa-images text-amber-400"></i> Gallery & Packaging (${extraImages.length})
             </span>
-            <label class="cursor-pointer text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold">
-              <i class="fa-solid fa-plus"></i> Add Photo
-              <input type="file" accept="image/*" class="hidden" onchange="uploadExtraPhoto('${item.id}', '${winId}', this)">
-            </label>
+            ${!isMarketView ? `
+              <label class="cursor-pointer text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-plus"></i> Add Photo
+                <input type="file" accept="image/*" class="hidden" onchange="uploadExtraPhoto('${item.id}', '${winId}', this)">
+              </label>
+            ` : ''}
           </div>
           
           <div class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
-            ${extraImages.length === 0 ? '<span class="text-[10px] text-gray-500 py-2 italic">No extra photos added.</span>' : ''}
+            ${extraImages.length === 0 ? '<span class="text-[10px] text-gray-500 py-2 italic">No additional photos uploaded.</span>' : ''}
             ${extraImages.map((imgUrl, idx) => `
               <div class="relative flex-shrink-0 w-14 h-14 bg-black/40 rounded border border-white/10 overflow-hidden group">
                 <img src="${imgUrl}" class="w-full h-full object-cover">
-                <button onclick="removeExtraPhoto('${item.id}', '${winId}',${idx})" class="absolute top-0.5 right-0.5 bg-black/80 text-red-400 hover:text-red-300 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px]">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
+                ${!isMarketView ? `
+                  <button onclick="removeExtraPhoto('${item.id}', '${winId}', ${idx})" class="absolute top-0.5 right-0.5 bg-black/80 text-red-400 hover:text-red-300 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px]">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                ` : ''}
               </div>
             `).join('')}
           </div>
         </div>
 
+        <!-- Specifications & Condition Overview -->
         <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
-              <span class="text-[8px] text-emerald-400/80 font-mono">${appraisalDate}</span>
+              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Year</span>
+              <span class="text-[8px] text-amber-400 font-mono">${item.year || 'Modern'}</span>
             </div>
-            <span class="text-base font-bold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
+            <span class="text-xs font-bold text-gray-200">${item.tier} Edition</span>
           </div>
           <div>
             <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Condition</span>
@@ -808,19 +856,40 @@
           </div>
         </div>
 
+        <!-- Secondary Market Breakdown & Historical Comps -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
           <h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Market Intelligence & Comps</span>
-            <span class="text-[8px] bg-emerald-500/10 text-emerald-300 px-1 py-0.5 rounded border border-emerald-500/20">eBay / Auction / Club</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Secondary Market Intelligence</span>
+            <span class="text-[8px] text-gray-400 font-mono">Appraised ${appraisalDate}</span>
           </h4>
-          <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Secondary market value estimated based on verified eBay sold listings.'}</p>
+          <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Valuation derived from eBay sold listings, collector forum benchmarks, and condition assessment.'}</p>
         </div>
 
+        <!-- Bottom Stamp Decoding -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
           <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
+            <i class="fa-solid fa-calendar-check"></i> Stamp & Date Code Breakdown
           </h4>
           <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
+        </div>
+
+        <!-- Finish & Artwork Specs -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info"></i> Design Specs & Casing
+          </h4>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
+            <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard catalog release'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Finish & Metal:</span>
+            <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
+            <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
+          </div>
         </div>
       `;
     }
@@ -888,7 +957,6 @@
       `;
     }
 
-    // Market Listing Action Handlers
     async function toggleListingStatus(itemId, winId) {
       const isChecked = document.getElementById(`listingToggle_${winId}`).checked;
       const optionsBox = document.getElementById(`listingOptions_${winId}`);
@@ -933,7 +1001,11 @@
       loadAppData();
     }
 
-    // Public Marketplace Inquiry Modal
+    function openMarketInquiryById(id) {
+      const item = publicMarketCollection.find(i => String(i.id) === String(id));
+      if (item) openMarketInquiry(item);
+    }
+
     function openMarketInquiry(item) {
       currentInquiryItem = item;
       const modal = document.getElementById('inquiryModal');
@@ -962,9 +1034,8 @@
       if (!currentInquiryItem) return;
       const message = document.getElementById('inquiryMessageInput').value;
       const subject = encodeURIComponent(`FlameVault Inquiry: ${currentInquiryItem.name}`);
-      const body = encodeURIComponent(message + `\n\n[Lighter Details: SKU #${currentInquiryItem.modelNumber || 'N/A'}, Asking: $${currentInquiryItem.listingPrice}]`);
+      const body = encodeURIComponent(message + `\n\n[Lighter Details: SKU #${currentInquiryItem.modelNumber || 'N/A'}, Asking: $${currentInquiryItem.listingPrice}, Condition: ${currentInquiryItem.condition}]`);
       
-      // Opens user's default email client
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
       closeInquiryModal();
     }
@@ -1013,7 +1084,6 @@
       if (windowEl) renderWindowContent(windowEl, winId, item, false);
     }
 
-    // High-speed text valuation engine
     async function requestMarketValuation(item) {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) throw new Error("Missing Gemini API Key in Config");
