@@ -298,30 +298,37 @@
     </div>
   </aside>
 
-  <!-- Balanced Bottom Navigation Bar (Centered Scan + Market to the Right) -->
-  <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
-    <button onclick="switchMainView('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition w-16">
+  <!-- Balanced Bottom Navigation Bar: Cloud sync, Vault, Scan (Elevated/Large), Market, Collecting -->
+  <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-3">
+    <!-- 1. Cloud Sync -->
+    <button onclick="loadAppData()" class="flex flex-col items-center text-gray-400 hover:text-white transition w-14">
+      <i class="fa-solid fa-cloud-arrow-down text-base"></i>
+      <span class="text-[10px] mt-1">Sync</span>
+    </button>
+
+    <!-- 2. Vault -->
+    <button onclick="switchMainView('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition w-14">
       <i class="fa-solid fa-boxes-stacked text-base"></i>
       <span class="text-[10px] mt-1">Vault</span>
     </button>
-    <button onclick="switchMainView('COLLECTING')" id="navCollectingBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16">
-      <i class="fa-solid fa-book-open text-base"></i>
-      <span class="text-[10px] mt-1">Collecting</span>
-    </button>
 
-    <!-- Prominent Centered Scan Trigger -->
-    <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-13 h-13 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
-      <i class="fa-solid fa-camera text-xl"></i>
-    </button>
+    <!-- 3. Raised & Enlarged Hero Scan Button -->
+    <div class="relative flex items-center justify-center w-16">
+      <button onclick="openScanModal()" class="absolute -top-6 bg-gradient-to-tr from-amber-500 to-amber-400 text-black w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-2xl shadow-amber-500/40 border-4 border-[#0d0e15] hover:scale-105 active:scale-95 transition z-40">
+        <i class="fa-solid fa-camera text-2xl"></i>
+      </button>
+    </div>
 
-    <!-- Market Placed Immediately Right of Scan -->
-    <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-16">
+    <!-- 4. Market -->
+    <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-14">
       <i class="fa-solid fa-store text-base"></i>
       <span class="text-[10px] mt-1">Market</span>
     </button>
-    <button onclick="openCOTYModal()" id="navDropsBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16">
-      <i class="fa-solid fa-trophy text-base"></i>
-      <span class="text-[10px] mt-1">COTY Drops</span>
+
+    <!-- 5. Collecting -->
+    <button onclick="switchMainView('COLLECTING')" id="navCollectingBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-14">
+      <i class="fa-solid fa-book-open text-base"></i>
+      <span class="text-[10px] mt-1">Collecting</span>
     </button>
   </nav>
 
@@ -525,48 +532,79 @@
     </div>
   </div>
 
-  <!-- Scan Modal -->
-  <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col">
+  <!-- Redesigned Focused Scan Modal (Promotes Spontaneous Discovery) -->
+  <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-3xl sm:rounded-2xl max-h-[92vh] overflow-y-auto p-5 border border-white/15 flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <h2 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Instant AI Scan & Add
-        </h2>
-        <button onclick="closeScanModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div>
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-lg"></i> Instant AI Zippo Scanner
+          </h2>
+          <p class="text-[11px] text-gray-400">Snap a lighter you stumble upon to decode the date stamp and market comp.</p>
+        </div>
+        <button onclick="closeScanModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 my-4">
-        <div>
-          <label class="block text-[11px] text-gray-400 mb-1">1. Front Face *</label>
-          <input type="file" id="frontPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
-        </div>
-        <div>
-          <label class="block text-[11px] text-amber-400 mb-1">2. Bottom Stamp *</label>
-          <input type="file" id="stampPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
-        </div>
+      <!-- Hero Photo Upload Zone (Large & Emphasized) -->
+      <div class="grid grid-cols-2 gap-3 my-5">
+        <label class="border-2 border-dashed border-amber-500/30 hover:border-amber-500/60 bg-[#12131c] hover:bg-[#161824] rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition group">
+          <div class="w-12 h-12 rounded-full bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-2">
+            <i class="fa-solid fa-camera"></i>
+          </div>
+          <span class="text-xs font-bold text-gray-200">1. Front Artwork</span>
+          <span class="text-[10px] text-gray-500 mt-0.5">Face engraving / graphic</span>
+          <input type="file" id="frontPhotoInput" accept="image/*" class="hidden" onchange="previewScanUpload(this, 'frontPreview')">
+          <div id="frontPreview" class="hidden mt-2 text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+            <i class="fa-solid fa-check"></i> Photo Ready
+          </div>
+        </label>
+
+        <label class="border-2 border-dashed border-amber-500/30 hover:border-amber-500/60 bg-[#12131c] hover:bg-[#161824] rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition group">
+          <div class="w-12 h-12 rounded-full bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-2">
+            <i class="fa-solid fa-barcode"></i>
+          </div>
+          <span class="text-xs font-bold text-amber-300">2. Bottom Stamp</span>
+          <span class="text-[10px] text-gray-500 mt-0.5">Macro date stamp code</span>
+          <input type="file" id="stampPhotoInput" accept="image/*" class="hidden" onchange="previewScanUpload(this, 'stampPreview')">
+          <div id="stampPreview" class="hidden mt-2 text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+            <i class="fa-solid fa-check"></i> Photo Ready
+          </div>
+        </label>
       </div>
 
-      <button id="runAiBtn" onclick="runAiIdentification()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-semibold rounded-lg text-xs flex items-center justify-center gap-2 shadow-md">
-        <span>Identify with AI</span>
+      <!-- Prominent Action Trigger -->
+      <button id="runAiBtn" onclick="runAiIdentification()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:scale-[1.01] active:scale-[0.99] text-black font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 transition">
+        <i class="fa-solid fa-bolt text-black text-base"></i>
+        <span>Identify & Appraise with AI</span>
       </button>
 
-      <div class="mt-4 space-y-3 pt-3 border-t border-white/10">
-        <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Official Model / Name</label>
-          <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+      <!-- Auto-Revealed Identification Results (Hidden initially) -->
+      <div id="scanResultFields" class="hidden mt-5 space-y-3 pt-4 border-t border-white/10">
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-check-circle text-emerald-400 text-base"></i>
+            <span class="text-xs font-bold text-white">Analysis Complete</span>
+          </div>
+          <span class="text-[10px] text-emerald-300">Verify details below</span>
         </div>
+
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Identified Model Name</label>
+          <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2.5 rounded-lg border border-white/10 mt-1">
+        </div>
+
         <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Catalog #</label>
-            <input type="text" id="formModelNum" placeholder="e.g. 48247" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Catalog #</label>
+            <input type="text" id="formModelNum" placeholder="e.g. 48247" class="w-full bg-[#12131c] text-xs text-white p-2.5 rounded-lg border border-white/10 mt-1">
           </div>
           <div>
-            <label class="block text-[10px] text-amber-400 uppercase tracking-wider">Edition #</label>
-            <input type="text" id="formEditionNum" placeholder="e.g. 05761/20020" class="w-full bg-[#12131c] text-xs text-amber-300 font-mono p-2 rounded border border-amber-500/30 mt-1">
+            <label class="block text-[10px] text-amber-400 uppercase tracking-wider font-bold">Edition #</label>
+            <input type="text" id="formEditionNum" placeholder="e.g. 05761/20020" class="w-full bg-[#12131c] text-xs text-amber-300 font-mono p-2.5 rounded-lg border border-amber-500/30 mt-1">
           </div>
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Tier</label>
-            <select id="formTier" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Tier</label>
+            <select id="formTier" class="w-full bg-[#12131c] text-xs text-white p-2.5 rounded-lg border border-white/10 mt-1">
               <option value="STANDARD">Standard</option>
               <option value="COTY">COTY</option>
               <option value="ARMOR">Armor</option>
@@ -574,37 +612,33 @@
             </select>
           </div>
         </div>
+
         <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Stamp Decoding</label>
-          <textarea id="formStampDetails" rows="2" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1"></textarea>
+          <label class="block text-[10px] text-amber-400 uppercase tracking-wider font-bold">Bottom Stamp Decoding</label>
+          <textarea id="formStampDetails" rows="2" class="w-full bg-[#12131c] text-xs text-white p-2.5 rounded-lg border border-white/10 mt-1"></textarea>
         </div>
-        <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Finish & Case Material</label>
-          <input type="text" id="formFinish" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
-        </div>
-        <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Artwork Details</label>
-          <input type="text" id="formArtwork" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
-        </div>
-        <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Market Analysis & Historical Comps</label>
-          <textarea id="formMarketNotes" rows="2" placeholder="Market sources and pricing history..." class="w-full bg-[#12131c] text-xs text-gray-300 p-2 rounded border border-white/10 mt-1"></textarea>
-        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Condition</label>
-            <select id="formCondition" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Condition</label>
+            <select id="formCondition" class="w-full bg-[#12131c] text-xs text-white p-2.5 rounded-lg border border-white/10 mt-1">
               <option value="Loose / Fired">Loose / Fired</option>
               <option value="Mint in Box">Mint in Box (Unfired)</option>
             </select>
           </div>
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Est. Value ($)</label>
-            <input type="number" id="formPrice" class="w-full bg-[#12131c] text-xs text-emerald-400 font-bold p-2 rounded border border-white/10 mt-1">
+            <label class="block text-[10px] text-emerald-400 uppercase tracking-wider font-bold">Estimated Value ($)</label>
+            <input type="number" id="formPrice" class="w-full bg-[#12131c] text-sm text-emerald-400 font-bold p-2.5 rounded-lg border border-emerald-500/30 mt-1">
           </div>
         </div>
-        <button id="saveVaultBtn" onclick="saveLighterToVault()" class="w-full py-2.5 bg-emerald-500 text-black font-bold text-xs rounded-lg mt-2">
-          Add to Vault
+
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Secondary Market Intelligence</label>
+          <textarea id="formMarketNotes" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-2.5 rounded-lg border border-white/10 mt-1"></textarea>
+        </div>
+
+        <button id="saveVaultBtn" onclick="saveLighterToVault()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs rounded-xl shadow-lg mt-2">
+          Save to My Vault
         </button>
       </div>
     </div>
@@ -658,11 +692,74 @@
       'gemini-3.1-pro-preview'
     ];
 
-    // Aliases to bridge SKU variations across Zippo catalogs
     const KNOWN_SKU_ALIASES = {
       '49119': '49272',
       '49272': '49119'
     };
+
+    // Authentic Milestone Grails with High-Quality Zippo Reference Photos
+    const DEFAULT_MASTER_GRAILS = [
+      {
+        id: 'ref_2020_coty',
+        title: 'Z2 Vision Collectible of the Year',
+        sku: '49272',
+        year: '2020',
+        tier: 'COTY',
+        description: 'Black Ice Armor featuring 360-degree laser engraved geometric line matrix and gold-plated insert.',
+        est_market: '$120 - $160',
+        img_url: 'https://i.ebayimg.com/images/g/JHUAAeSwxKZqnMtS/s-l1600.webp'
+      },
+      {
+        id: 'ref_1941_crackle',
+        title: '1941 Replica Black Crackle',
+        sku: '28582',
+        year: 'Replica',
+        tier: 'VINTAGE',
+        description: 'Authentic 4-barrel hinge, flat planes with rounded edges, and textured war-era black crackle finish.',
+        est_market: '$35 - $55',
+        img_url: 'http://zippo.com/cdn/shop/products/06aae704e94d127cf93268c1f91c7cd2e31178cf.jpg?v=1744726066'
+      },
+      {
+        id: 'ref_1935_replica',
+        title: '1935 Replica Original Outer Hinge',
+        sku: '1935',
+        year: 'Replica',
+        tier: 'VINTAGE',
+        description: 'Squared-off corner case, external 3-barrel hinge, flat bottom stamp, and open chimney holes.',
+        est_market: '$40 - $65',
+        img_url: 'http://zippo.com/cdn/shop/products/f38ac05e6f971384db04b193209ba750afe4a65e.jpg?v=1744725585'
+      },
+      {
+        id: 'ref_copper_case',
+        title: 'Solid Copper Case Limited Edition',
+        sku: '48107',
+        year: '2022',
+        tier: 'LIMITED',
+        description: 'Solid unfinished copper casing that develops a unique natural patina, paired with black-plated steel insert.',
+        est_market: '$85 - $130',
+        img_url: 'https://i.etsystatic.com/62578908/r/il/5175a2/7555706995/il_fullxfull.7555706995_dn3k.jpg'
+      },
+      {
+        id: 'ref_2022_90th',
+        title: '90th Anniversary Commemorative COTY',
+        sku: '49867',
+        year: '2022',
+        tier: 'COTY',
+        description: 'Heavy Armor High Polish Black Ice featuring 3D deep carve and 90th commemorative bottom stamp.',
+        est_market: '$115 - $150',
+        img_url: 'https://i.ebayimg.com/images/g/JHUAAeSwxKZqnMtS/s-l1600.webp'
+      },
+      {
+        id: 'ref_2018_scroll',
+        title: 'Golden Scroll Armor COTY',
+        sku: '29653',
+        year: '2018',
+        tier: 'COTY',
+        description: 'Armor Gold Plate with 360-degree MultiCut deep-carve floral scrollwork.',
+        est_market: '$140 - $190',
+        img_url: 'http://zippo.com/cdn/shop/products/f38ac05e6f971384db04b193209ba750afe4a65e.jpg?v=1744725585'
+      }
+    ];
 
     function initSupabase() {
       try {
@@ -774,10 +871,16 @@
 
       try {
         const { data: refData } = await supabaseClient.from('reference_lighters').select('*').order('created_at', { ascending: false });
-        if (refData) {
-          referenceCatalog = refData;
-          renderMasterGrailShelf();
+        if (refData && refData.length > 0) {
+          // Merge Supabase reference items with high-res authentic defaults
+          referenceCatalog = refData.map(item => {
+            const match = DEFAULT_MASTER_GRAILS.find(g => g.sku === item.sku || g.title === item.title);
+            return match ? { ...item, img_url: match.img_url } : item;
+          });
+        } else {
+          referenceCatalog = DEFAULT_MASTER_GRAILS;
         }
+        renderMasterGrailShelf();
 
         if (currentUser) {
           const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
@@ -809,7 +912,6 @@
         const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
         if (marketData) publicMarketCollection = mapRows(marketData);
 
-        // Fetch all community lighters for radar cross-reference
         const { data: allLighters } = await supabaseClient.from('lighters').select('*');
         if (allLighters) allCommunityLighters = mapRows(allLighters);
 
@@ -872,9 +974,9 @@
       const collectingViewport = document.getElementById('collectingViewport');
       const batchTray = document.getElementById('batchTray');
 
-      if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16";
-      if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16";
-      if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-16";
+      if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-14";
+      if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-14";
+      if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-14";
 
       if (itemsGrid) itemsGrid.classList.add('hidden');
       if (profileViewport) profileViewport.classList.add('hidden');
@@ -883,7 +985,7 @@
       if (batchTray) batchTray.classList.add('hidden');
 
       if (mode === 'VAULT') {
-        if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-16";
+        if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-14";
         if (headerBadge) {
           headerBadge.innerText = "Vault";
           headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
@@ -893,7 +995,7 @@
         if (batchTray) batchTray.classList.remove('hidden');
         renderCurrentView();
       } else if (mode === 'COLLECTING') {
-        if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-16";
+        if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-14";
         if (headerBadge) {
           headerBadge.innerText = "Collecting Guide";
           headerBadge.className = "text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
@@ -902,7 +1004,7 @@
         if (collectingViewport) collectingViewport.classList.remove('hidden');
         renderWatchlist();
       } else if (mode === 'MARKET') {
-        if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition w-16";
+        if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition w-14";
         if (headerBadge) {
           headerBadge.innerText = "Marketplace";
           headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
@@ -943,25 +1045,26 @@
       }
     }
 
+    // Render Milestone Grails with Authentic Photos
     function renderMasterGrailShelf() {
       const shelf = document.getElementById('masterGrailShelf');
       if (!shelf) return;
       shelf.innerHTML = '';
 
-      referenceCatalog.slice(0, 10).forEach(ref => {
+      referenceCatalog.slice(0, 8).forEach(ref => {
         const isTracked = userWatchlist.some(w => w.lighter_title === ref.title || (w.model_sku && w.model_sku === ref.sku));
         const itemEl = document.createElement('div');
-        itemEl.className = "flex-shrink-0 w-28 bg-[#12131c] rounded-xl p-2 border border-white/10 flex flex-col justify-between hover:border-amber-500/40 transition";
+        itemEl.className = "flex-shrink-0 w-32 bg-[#12131c] rounded-2xl p-2 border border-white/10 flex flex-col justify-between hover:border-amber-500/40 transition shadow-lg";
         itemEl.innerHTML = `
           <div>
-            <div class="relative w-full aspect-square rounded-lg bg-black/40 overflow-hidden mb-1.5">
-              <img src="${ref.img_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300'}" class="w-full h-full object-cover">
-              <span class="absolute top-1 left-1 bg-black/80 text-amber-400 text-[8px] font-bold px-1 rounded">${ref.year}</span>
+            <div class="relative w-full aspect-square rounded-xl bg-black/60 overflow-hidden mb-2 border border-white/5">
+              <img src="${ref.img_url || 'https://i.ebayimg.com/images/g/JHUAAeSwxKZqnMtS/s-l1600.webp'}" class="w-full h-full object-cover">
+              <span class="absolute top-1 left-1 bg-black/80 text-amber-400 text-[8px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30">${ref.year}</span>
             </div>
             <h4 class="text-[10px] font-bold text-gray-100 truncate">${ref.title}</h4>
-            <span class="text-[9px] text-emerald-400 font-mono block">${ref.est_market || 'Rare'}</span>
+            <span class="text-[9px] text-emerald-400 font-mono font-bold block mt-0.5">${ref.est_market || 'Rare'}</span>
           </div>
-          <button onclick="trackReferenceItem('${ref.id}')" class="w-full py-1 mt-1.5 text-[9px] font-bold rounded flex items-center justify-center gap-1 transition ${isTracked ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500 hover:bg-amber-600 text-black'}">
+          <button onclick="trackReferenceItem('${ref.id}')" class="w-full py-1.5 mt-2 text-[9px] font-extrabold rounded-lg flex items-center justify-center gap-1 transition ${isTracked ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500 hover:bg-amber-600 text-black'}">
             ${isTracked ? '<i class="fa-solid fa-check"></i> Tracked' : '<i class="fa-solid fa-plus"></i> Track'}
           </button>
         `;
@@ -1133,7 +1236,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
-    // Community Grail Radar Matching Engine with Robust Normalization
+    // Community Grail Radar Matching Engine
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
       const badge = document.getElementById('watchlistCountBadge');
@@ -1151,7 +1254,6 @@ Respond strictly in raw JSON with no formatting or backticks:
         const skuRaw = (w.model_sku || '').toLowerCase().trim();
         const aliasSku = KNOWN_SKU_ALIASES[skuRaw] || '';
 
-        // Extract 4-digit year if present (e.g. "2020", "2018")
         const yearMatch = titleRaw.match(/\b(19\d{2}|20\d{2})\b/);
         const targetYear = yearMatch ? yearMatch[1] : '';
 
@@ -1162,20 +1264,17 @@ Respond strictly in raw JSON with no formatting or backticks:
           const lName = (l.name || '').toLowerCase();
           const lYear = (l.year || '').toLowerCase();
 
-          // 1. Direct SKU or Alias SKU Match
           if (skuRaw && lSku) {
             if (skuRaw === lSku || lSku.includes(skuRaw)) return true;
             if (aliasSku && (aliasSku === lSku || lSku.includes(aliasSku))) return true;
           }
 
-          // 2. Year + COTY / Collectible Matching (e.g. "2020" + "COTY" matches "Z2 Vision" 2020)
           if (targetYear && (lYear === targetYear || lName.includes(targetYear))) {
             const isTargetCOTY = titleRaw.includes('coty') || titleRaw.includes('collectible') || titleRaw.includes('vision');
             const isLighterCOTY = l.tier === 'COTY' || lName.includes('coty') || lName.includes('collectible');
             if (isTargetCOTY && isLighterCOTY) return true;
           }
 
-          // 3. Substring Name Matching
           if (titleRaw.length > 3 && lName.includes(titleRaw)) return true;
           if (lName.length > 3 && titleRaw.includes(lName)) return true;
 
@@ -1420,7 +1519,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       const isMe = currentUser && currentUser.id === userId;
       const isFriend = friendsList.some(f => (f.user_id === userId || f.friend_id === userId));
 
-      // Check visibility permission
       const visibility = profile.vault_visibility || 'EVERYONE';
       const isVaultAccessible = (visibility === 'EVERYONE') || (visibility === 'FRIENDS' && isFriend) || isMe;
 
@@ -1445,7 +1543,7 @@ Respond strictly in raw JSON with no formatting or backticks:
         `;
       }
 
-      // 1. Render Featured Showcase
+      // Render Featured Showcase
       const userShowcase = allCommunityLighters.filter(l => l.userId === userId && l.inShowcase);
       if (showcaseGrid) {
         showcaseGrid.innerHTML = '';
@@ -1466,7 +1564,7 @@ Respond strictly in raw JSON with no formatting or backticks:
         }
       }
 
-      // 2. Render Full Accessible Vault Inventory
+      // Render Full Vault Inventory
       const userFullVault = allCommunityLighters.filter(l => l.userId === userId);
       if (vaultCountBadge) vaultCountBadge.innerText = `${userFullVault.length} Items`;
 
@@ -2406,12 +2504,29 @@ Respond in raw JSON:
 
     function openScanModal() { 
       const el = document.getElementById('scanModal');
+      const fields = document.getElementById('scanResultFields');
+      const fPrev = document.getElementById('frontPreview');
+      const sPrev = document.getElementById('stampPreview');
+      if (fields) fields.classList.add('hidden');
+      if (fPrev) fPrev.classList.add('hidden');
+      if (sPrev) sPrev.classList.add('hidden');
+      document.getElementById('frontPhotoInput').value = '';
+      document.getElementById('stampPhotoInput').value = '';
       if (el) el.classList.remove('hidden'); 
     }
+
     function closeScanModal() { 
       const el = document.getElementById('scanModal');
       if (el) el.classList.add('hidden'); 
     }
+
+    function previewScanUpload(input, previewId) {
+      const p = document.getElementById(previewId);
+      if (input.files && input.files[0] && p) {
+        p.classList.remove('hidden');
+      }
+    }
+
     function toggleSettingsModal() { 
       const el = document.getElementById('settingsModal');
       if (el) el.classList.toggle('hidden'); 
@@ -2459,6 +2574,7 @@ Respond in raw JSON:
       if (!frontFile && !stampFile) return alert("Please select at least one photo (front face or bottom stamp).");
 
       const runBtn = document.getElementById('runAiBtn'); 
+      const resultFields = document.getElementById('scanResultFields');
       if (runBtn) runBtn.disabled = true;
 
       try {
@@ -2544,6 +2660,7 @@ Return raw JSON strictly matching this schema:
 
         if (!parsed) throw lastError || new Error("Could not parse image data.");
 
+        // Populate and unhide fields on successful scan
         document.getElementById('formModel').value = parsed.name || "Custom Zippo";
         document.getElementById('formModelNum').value = parsed.modelNumber || "";
         document.getElementById('formEditionNum').value = parsed.editionNumber || "";
@@ -2555,11 +2672,13 @@ Return raw JSON strictly matching this schema:
         document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
         document.getElementById('formPrice').value = parsed.price || 35.00;
 
+        if (resultFields) resultFields.classList.remove('hidden');
+
       } catch (err) {
         alert(`Scan error: ${err.message}`);
       } finally { 
         if (runBtn) {
-          runBtn.innerText = "Identify with AI"; 
+          runBtn.innerHTML = `<i class="fa-solid fa-rotate-right text-black text-sm"></i> <span>Re-Scan Lighter</span>`; 
           runBtn.disabled = false; 
         }
       }
@@ -2568,7 +2687,7 @@ Return raw JSON strictly matching this schema:
     async function saveLighterToVault() {
       const saveBtn = document.getElementById('saveVaultBtn');
       if (saveBtn) {
-        saveBtn.innerText = "Saving..."; 
+        saveBtn.innerText = "Saving to Vault..."; 
         saveBtn.disabled = true;
       }
       try {
@@ -2585,7 +2704,7 @@ Return raw JSON strictly matching this schema:
         const frontFile = document.getElementById('frontPhotoInput').files[0];
         const stampFile = document.getElementById('stampPhotoInput').files[0];
 
-        let frontImgUrl = "[https://images.unsplash.com/photo-1542838132-92c53300491e?w=300](https://images.unsplash.com/photo-1542838132-92c53300491e?w=300)";
+        let frontImgUrl = "[https://i.ebayimg.com/images/g/JHUAAeSwxKZqnMtS/s-l1600.webp](https://i.ebayimg.com/images/g/JHUAAeSwxKZqnMtS/s-l1600.webp)";
         let stampImgUrl = null;
 
         if (supabaseClient && currentUser) {
@@ -2605,15 +2724,10 @@ Return raw JSON strictly matching this schema:
       } catch (e) { alert("Save error: " + e.message); }
       finally { 
         if (saveBtn) {
-          saveBtn.innerText = "Add to Vault"; 
+          saveBtn.innerText = "Save to My Vault"; 
           saveBtn.disabled = false; 
         }
       }
-    }
-
-    function openCOTYModal() {
-      switchMainView('COLLECTING');
-      switchCollectingSubTab('WATCHLIST');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
