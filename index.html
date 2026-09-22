@@ -123,7 +123,7 @@
     <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Fast AI Scan & Add
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Instant AI Scan & Add
         </h2>
         <button onclick="closeScanModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
@@ -235,6 +235,13 @@
     let highestZIndex = 50;
     let windowCascadeOffset = 0;
 
+    // Verified production models for fast OCR and low latency
+    const ACTIVE_GEMINI_MODELS = [
+      'gemini-2.5-flash',
+      'gemini-3.5-flash',
+      'gemini-3.1-pro-preview'
+    ];
+
     function cleanSupabaseUrl(rawUrl) {
       if (!rawUrl) return '';
       let url = rawUrl.trim().replace(/\/+$/, '');
@@ -302,8 +309,8 @@
       renderCollection();
     }
 
-    // Fast, lightweight image compression (max 900px, 80% quality) for rapid uploads & sharp OCR
-    async function fileToCompressedBlob(file, maxDimension = 900) {
+    // Fast image compressor (850px max, 80% JPEG) for fast mobile transmission
+    async function fileToCompressedBlob(file, maxDimension = 850) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = reject;
@@ -418,7 +425,7 @@
       updateBatchTray();
     }
 
-    // Dynamic Multi-Window Inspector
+    // Floating Multi-Window Inspector
     function openInspectionWindow(id) {
       const item = collection.find(i => String(i.id) === String(id));
       if (!item) return;
@@ -692,7 +699,7 @@
       if (windowEl) renderWindowContent(windowEl, winId, item, false);
     }
 
-    // High-speed text valuation engine
+    // High-speed text valuation engine using valid production models & zero thinking delay
     async function requestMarketValuation(item) {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) throw new Error("Missing Gemini API Key");
@@ -714,18 +721,19 @@ Respond STRICTLY in raw JSON format with no markdown, backticks, or other text:
   "marketNotes": "Concise breakdown summarizing verified eBay completed sold comp benchmarks, MSRP delta, and collector liquidity."
 }`;
 
-      // Strictly valid, fast production endpoints
-      const candidateModels = ['gemini-3.6-flash', 'gemini-3-flash', 'gemini-3.1-pro'];
       let lastError = null;
 
-      for (const model of candidateModels) {
+      for (const model of ACTIVE_GEMINI_MODELS) {
         try {
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { response_mime_type: "application/json" }
+              generationConfig: { 
+                response_mime_type: "application/json",
+                thinking_config: { thinking_budget: 0 }
+              }
             })
           });
 
@@ -735,10 +743,10 @@ Respond STRICTLY in raw JSON format with no markdown, backticks, or other text:
           return JSON.parse(data.candidates[0].content.parts[0].text);
         } catch (err) {
           lastError = err;
-          await new Promise(r => setTimeout(r, 400));
+          await new Promise(r => setTimeout(r, 200));
         }
       }
-      throw lastError || new Error("Valuation models busy");
+      throw lastError || new Error("Valuation service busy. Please try again.");
     }
 
     async function reappraiseSingleLighter(itemId, winId) {
@@ -810,7 +818,7 @@ Respond STRICTLY in raw JSON format with no markdown, backticks, or other text:
           console.warn(`Failed re-appraisal on ${item.name}`, e);
         }
 
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 250));
       }
 
       localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
@@ -1106,7 +1114,7 @@ JSON FORMAT:
         parts.push({ text: systemInstruction });
 
         if (frontFile) {
-          const frontBlob = await fileToCompressedBlob(frontFile, 900);
+          const frontBlob = await fileToCompressedBlob(frontFile, 850);
           const reader = new FileReader();
           const frontBase64Promise = new Promise(resolve => {
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
@@ -1118,7 +1126,7 @@ JSON FORMAT:
         }
 
         if (stampFile) {
-          const stampBlob = await fileToCompressedBlob(stampFile, 900);
+          const stampBlob = await fileToCompressedBlob(stampFile, 850);
           const reader = new FileReader();
           const stampBase64Promise = new Promise(resolve => {
             reader.onloadend = () => resolve(reader.result.split(',')[1]);
@@ -1129,17 +1137,10 @@ JSON FORMAT:
           parts.push({ inline_data: { mime_type: 'image/jpeg', data: stampBase64 } });
         }
 
-        // Clean, verified high-speed production endpoints
-        const candidateModels = [
-          'gemini-3.6-flash',
-          'gemini-3-flash',
-          'gemini-3.1-pro'
-        ];
-
         let success = false;
         let lastError = null;
 
-        for (const model of candidateModels) {
+        for (const model of ACTIVE_GEMINI_MODELS) {
           try {
             runBtn.innerText = `Scanning (${model.replace('gemini-', '')})...`;
 
@@ -1148,7 +1149,10 @@ JSON FORMAT:
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts }],
-                generationConfig: { response_mime_type: "application/json" }
+                generationConfig: { 
+                  response_mime_type: "application/json",
+                  thinking_config: { thinking_budget: 0 }
+                }
               })
             });
 
@@ -1173,7 +1177,7 @@ JSON FORMAT:
           } catch (err) {
             console.warn(`${model} failed:`, err);
             lastError = err;
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 200));
           }
         }
 
