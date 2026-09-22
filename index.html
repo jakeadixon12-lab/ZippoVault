@@ -11,8 +11,6 @@
     body { background-color: #0d0e15; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .card-surface { background-color: #191b26; border: 1px solid rgba(255, 255, 255, 0.08); }
     .bottom-nav { background-color: #12131c; border-top: 1px solid rgba(255, 255, 255, 0.08); }
-    
-    /* Floating Window Drag Handle Styling */
     .drag-handle { touch-action: none; cursor: grab; }
     .drag-handle:active { cursor: grabbing; }
   </style>
@@ -27,6 +25,9 @@
         <h1 class="text-xl font-bold tracking-tight text-white">ZippoVault</h1>
       </div>
       <div class="flex items-center gap-2">
+        <button id="closeAllWindowsBtn" onclick="closeAllInspectionWindows()" class="hidden text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/30">
+          Close Windows (<span id="openWindowsCount">0</span>)
+        </button>
         <span id="syncIndicator" class="text-[10px] text-gray-500 flex items-center gap-1">
           <i class="fa-solid fa-circle text-[8px] text-amber-500"></i> Local
         </span>
@@ -61,6 +62,9 @@
       <p class="text-sm">No Zippos in vault. Tap Scan to add one.</p>
     </div>
   </main>
+
+  <!-- Container for Multiple Dynamic Floating Cards -->
+  <div id="floatingWindowsContainer" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
 
   <!-- Sticky Batch Tray -->
   <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20">
@@ -98,70 +102,6 @@
     </button>
   </nav>
 
-  <!-- Floating Draggable Detail Window -->
-  <div id="detailModal" class="hidden fixed z-50 w-[92vw] max-w-sm bg-[#191b26] rounded-2xl shadow-2xl border border-white/15 flex flex-col max-h-[85vh] overflow-hidden">
-    <!-- Draggable Header Handle -->
-    <div id="dragHeader" class="drag-handle bg-[#12131c] px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-grip-lines text-gray-500 text-xs"></i>
-        <span id="modalTierBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 uppercase">STANDARD</span>
-      </div>
-      <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white p-1">
-        <i class="fa-solid fa-xmark text-base"></i>
-      </button>
-    </div>
-
-    <!-- Scrollable Detail Body -->
-    <div class="p-4 overflow-y-auto space-y-3.5">
-      <div>
-        <h2 id="modalTitle" class="text-base font-bold text-white">Zippo Name</h2>
-        <p id="modalModelNum" class="text-xs text-amber-400/90 font-mono mt-0.5"></p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
-          <img id="modalFrontImg" class="w-full h-full object-cover">
-        </div>
-        <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
-          <img id="modalStampImg" class="w-full h-full object-cover hidden">
-          <span id="noStampPlaceholder" class="text-[11px] text-gray-500 text-center px-2">No Stamp Photo</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2.5 rounded-lg border border-white/5">
-        <div>
-          <span class="text-[10px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
-          <span id="modalPrice" class="text-base font-bold text-emerald-400">$0.00</span>
-        </div>
-        <div>
-          <span class="text-[10px] text-gray-400 uppercase tracking-wider block">Condition</span>
-          <span id="modalCondition" class="text-xs text-gray-200 font-medium">Loose / Fired</span>
-        </div>
-      </div>
-
-      <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
-        <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
-        </h4>
-        <p id="modalStampDetails" class="text-xs text-gray-300 leading-relaxed"></p>
-      </div>
-
-      <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-2">
-        <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
-        </h4>
-        <div>
-          <span class="text-[10px] text-gray-400 uppercase block">Finish & Case:</span>
-          <p id="modalFinish" class="text-xs text-gray-300"></p>
-        </div>
-        <div>
-          <span class="text-[10px] text-gray-400 uppercase block">Artwork Details:</span>
-          <p id="modalArtwork" class="text-xs text-gray-300"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Scan Modal -->
   <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col">
@@ -192,13 +132,18 @@
           <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Official Model / Name</label>
           <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        
+        <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Catalog / Model #</label>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Catalog #</label>
             <input type="text" id="formModelNum" placeholder="e.g. 48247" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
           </div>
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Category Tier</label>
+            <label class="block text-[10px] text-amber-400 uppercase tracking-wider">Edition / Make #</label>
+            <input type="text" id="formEditionNum" placeholder="e.g. 05761/20020" class="w-full bg-[#12131c] text-xs text-amber-300 font-mono p-2 rounded border border-amber-500/30 mt-1">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Tier</label>
             <select id="formTier" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
               <option value="STANDARD">Standard</option>
               <option value="COTY">COTY</option>
@@ -207,6 +152,7 @@
             </select>
           </div>
         </div>
+
         <div>
           <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Bottom Stamp Decoding</label>
           <textarea id="formStampDetails" rows="2" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1"></textarea>
@@ -266,6 +212,8 @@
     let supabaseClient = null;
     let collection = [];
     let selectedIds = new Set();
+    let highestZIndex = 50;
+    let windowCascadeOffset = 0;
 
     function cleanSupabaseUrl(rawUrl) {
       if (!rawUrl) return '';
@@ -315,6 +263,7 @@
         id: row.id,
         name: row.name,
         modelNumber: row.model_number,
+        editionNumber: row.edition_number || '',
         year: row.year,
         tier: row.tier,
         stampDetails: row.stamp_details,
@@ -403,6 +352,7 @@
       const filtered = collection.filter(item => {
         const matchesSearch = (item.name || '').toLowerCase().includes(search) || 
                               (item.modelNumber && item.modelNumber.toLowerCase().includes(search)) ||
+                              (item.editionNumber && item.editionNumber.toLowerCase().includes(search)) ||
                               (item.year && item.year.includes(search));
         const matchesTier = (filter === 'ALL') || (item.tier === filter);
         return matchesSearch && matchesTier;
@@ -420,7 +370,7 @@
         card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative cursor-pointer active:scale-95 transition-transform";
         
         card.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT') openDetailModal(item.id);
+          if (e.target.tagName !== 'INPUT') openInspectionWindow(item.id);
         });
 
         const displayImg = item.frontImg || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
@@ -428,6 +378,7 @@
         card.innerHTML = `
           <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
             <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
+            ${item.editionNumber ? `<span class="absolute bottom-1 left-1 bg-amber-500/90 text-black text-[8px] font-mono font-bold px-1 rounded truncate max-w-[85%]">${item.editionNumber}</span>` : ''}
             <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
             <img src="${displayImg}" alt="${item.name}" class="w-full h-full object-cover pointer-events-none">
           </div>
@@ -443,111 +394,188 @@
       updateBatchTray();
     }
 
-    // Floating Modal Logic & Draggable Behavior
-    const detailModal = document.getElementById('detailModal');
-    const dragHeader = document.getElementById('dragHeader');
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let modalInitialLeft = 0;
-    let modalInitialTop = 0;
-
-    function openDetailModal(id) {
+    // Spawn Independent Draggable Floating Window (Multiple allowed simultaneously)
+    function openInspectionWindow(id) {
       const item = collection.find(i => String(i.id) === String(id));
       if (!item) return;
 
-      document.getElementById('modalTitle').innerText = item.name;
-      document.getElementById('modalModelNum').innerText = item.modelNumber ? `Model #${item.modelNumber}` : (item.year || '');
-      document.getElementById('modalTierBadge').innerText = item.tier;
-      document.getElementById('modalPrice').innerText = `$${Number(item.price).toFixed(2)}`;
-      document.getElementById('modalCondition').innerText = item.condition || 'Loose / Fired';
-      document.getElementById('modalStampDetails').innerText = item.stampDetails || 'No stamp details recorded.';
-      document.getElementById('modalFinish').innerText = item.finish || 'Standard Zippo casing.';
-      document.getElementById('modalArtwork').innerText = item.artwork || 'Standard factory finish.';
-      document.getElementById('modalFrontImg').src = item.frontImg || '';
+      const container = document.getElementById('floatingWindowsContainer');
+      const winId = `win_${item.id}_${Date.now()}`;
+      highestZIndex += 1;
 
-      const stampImgEl = document.getElementById('modalStampImg');
-      const placeholder = document.getElementById('noStampPlaceholder');
-      if (item.stampImg) {
-        stampImgEl.src = item.stampImg;
-        stampImgEl.classList.remove('hidden');
-        placeholder.classList.add('hidden');
+      // Cascade windows diagonally so comparing is instant
+      const baseTop = 40 + (windowCascadeOffset % 120);
+      const baseLeft = 15 + (windowCascadeOffset % 120);
+      windowCascadeOffset += 28;
+
+      const windowEl = document.createElement('div');
+      windowEl.id = winId;
+      windowEl.className = "pointer-events-auto absolute w-[88vw] max-w-[340px] bg-[#191b26] rounded-2xl shadow-2xl border border-white/20 flex flex-col max-h-[82vh] overflow-hidden select-none transition-shadow";
+      windowEl.style.zIndex = highestZIndex;
+      windowEl.style.top = `${baseTop}px`;
+      windowEl.style.left = `${Math.min(baseLeft, window.innerWidth - 350 > 0 ? window.innerWidth - 350 : 20)}px`;
+
+      windowEl.addEventListener('mousedown', () => bringWindowToFront(windowEl));
+      windowEl.addEventListener('touchstart', () => bringWindowToFront(windowEl));
+
+      windowEl.innerHTML = `
+        <!-- Drag Header Handle -->
+        <div class="drag-handle bg-[#12131c] px-3.5 py-2.5 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-2 overflow-hidden mr-2">
+            <i class="fa-solid fa-grip-lines text-gray-500 text-xs"></i>
+            <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30 uppercase">${item.tier}</span>
+            <span class="text-xs font-bold text-gray-200 truncate">${item.name}</span>
+          </div>
+          <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Scrollable Details -->
+        <div class="p-3.5 overflow-y-auto space-y-3">
+          ${item.editionNumber ? `
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+              <span class="text-[10px] uppercase font-bold text-amber-400">COTY Edition #</span>
+              <span class="text-xs font-mono font-extrabold text-amber-300 tracking-wider">${item.editionNumber}</span>
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
+              <img src="${item.frontImg || ''}" class="w-full h-full object-cover">
+            </div>
+            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+              ${item.stampImg ? `<img src="${item.stampImg}" class="w-full h-full object-cover">` : '<span class="text-[10px] text-gray-500 text-center px-1">No Stamp Photo</span>'}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
+            <div>
+              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
+              <span class="text-base font-bold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Condition</span>
+              <span class="text-xs text-gray-200 font-medium">${item.condition || 'Loose / Fired'}</span>
+            </div>
+          </div>
+
+          <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
+            <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
+            </h4>
+            <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
+          </div>
+
+          <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+            <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
+            </h4>
+            <div>
+              <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
+              <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard release'}</p>
+            </div>
+            <div>
+              <span class="text-[9px] text-gray-400 uppercase block">Finish & Case:</span>
+              <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
+            </div>
+            <div>
+              <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
+              <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(windowEl);
+      bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
+      updateWindowCountBadge();
+    }
+
+    function bringWindowToFront(windowEl) {
+      highestZIndex += 1;
+      windowEl.style.zIndex = highestZIndex;
+    }
+
+    function closeInspectionWindow(winId) {
+      const el = document.getElementById(winId);
+      if (el) el.remove();
+      updateWindowCountBadge();
+    }
+
+    function closeAllInspectionWindows() {
+      document.getElementById('floatingWindowsContainer').innerHTML = '';
+      windowCascadeOffset = 0;
+      updateWindowCountBadge();
+    }
+
+    function updateWindowCountBadge() {
+      const count = document.getElementById('floatingWindowsContainer').children.length;
+      const countBadge = document.getElementById('closeAllWindowsBtn');
+      const countSpan = document.getElementById('openWindowsCount');
+      if (count > 0) {
+        countBadge.classList.remove('hidden');
+        countSpan.innerText = count;
       } else {
-        stampImgEl.classList.add('hidden');
-        placeholder.classList.remove('hidden');
+        countBadge.classList.add('hidden');
+      }
+    }
+
+    // Modular Drag Controller for dynamically spawned elements
+    function bindDraggable(windowEl, handleEl) {
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+
+      function onStart(clientX, clientY) {
+        isDragging = true;
+        bringWindowToFront(windowEl);
+        startX = clientX;
+        startY = clientY;
+        initialLeft = windowEl.offsetLeft;
+        initialTop = windowEl.offsetTop;
       }
 
-      // Center the floating window initially
-      detailModal.classList.remove('hidden');
-      const winW = window.innerWidth;
-      const winH = window.innerHeight;
-      const modalW = detailModal.offsetWidth;
-      const modalH = detailModal.offsetHeight;
+      function onMove(clientX, clientY) {
+        if (!isDragging) return;
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
 
-      detailModal.style.left = `${Math.max(10, (winW - modalW) / 2)}px`;
-      detailModal.style.top = `${Math.max(20, (winH - modalH) / 2)}px`;
-    }
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
 
-    function closeDetailModal() {
-      detailModal.classList.add('hidden');
-    }
+        const maxLeft = window.innerWidth - windowEl.offsetWidth - 5;
+        const maxTop = window.innerHeight - windowEl.offsetHeight - 5;
 
-    // Draggable Touch & Mouse Listeners
-    function startDrag(clientX, clientY) {
-      isDragging = true;
-      dragStartX = clientX;
-      dragStartY = clientY;
-      modalInitialLeft = detailModal.offsetLeft;
-      modalInitialTop = detailModal.offsetTop;
-    }
-
-    function moveDrag(clientX, clientY) {
-      if (!isDragging) return;
-      const deltaX = clientX - dragStartX;
-      const deltaY = clientY - dragStartY;
-
-      let newLeft = modalInitialLeft + deltaX;
-      let newTop = modalInitialTop + deltaY;
-
-      // Keep within bounds
-      const maxLeft = window.innerWidth - detailModal.offsetWidth - 5;
-      const maxTop = window.innerHeight - detailModal.offsetHeight - 5;
-
-      newLeft = Math.max(5, Math.min(newLeft, maxLeft));
-      newTop = Math.max(5, Math.min(newTop, maxTop));
-
-      detailModal.style.left = `${newLeft}px`;
-      detailModal.style.top = `${newTop}px`;
-    }
-
-    function endDrag() {
-      isDragging = false;
-    }
-
-    // Desktop Mouse Drag
-    dragHeader.addEventListener('mousedown', (e) => {
-      startDrag(e.clientX, e.clientY);
-    });
-    window.addEventListener('mousemove', (e) => {
-      moveDrag(e.clientX, e.clientY);
-    });
-    window.addEventListener('mouseup', endDrag);
-
-    // Mobile Touch Drag
-    dragHeader.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        windowEl.style.left = `${Math.max(5, Math.min(newLeft, maxLeft))}px`;
+        windowEl.style.top = `${Math.max(5, Math.min(newTop, maxTop))}px`;
       }
-    }, { passive: false });
 
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging && e.touches.length === 1) {
-        e.preventDefault(); // Prevents page scrolling while moving modal
-        moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+      function onEnd() {
+        isDragging = false;
       }
-    }, { passive: false });
 
-    window.addEventListener('touchend', endDrag);
+      // Mouse drag
+      handleEl.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
+      window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+      window.addEventListener('mouseup', onEnd);
+
+      // Touch drag
+      handleEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: false });
+
+      window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches.length === 1) {
+          e.preventDefault();
+          onMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      window.addEventListener('touchend', onEnd);
+    }
 
     function toggleSelect(id) {
       if (selectedIds.has(id)) selectedIds.delete(id);
@@ -662,7 +690,7 @@
       });
     }
 
-    // AI Dual-Image Analyzer (Strictly post-3.1 model pipeline with infinite cycle)
+    // AI Dual-Image Analyzer (Strictly post-3.1 model pipeline with COTY Edition extraction)
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) {
@@ -693,15 +721,15 @@ ZIPPO DATE CODE DECODING RULES:
 - 1958 to 1985: Dots and slashes flanking the Zippo logo.
 - Location: "BRADFORD, PA. MADE IN U.S.A."
 
-INSTRUCTIONS:
-1. Locate the month letter on the left and the two-digit year code on the right of the bottom stamp.
-2. Identify the official catalog model name, 5-digit SKU if known (e.g. 48247), finish type, and artwork technique.
-3. Respond STRICTLY in raw JSON format with no markdown, backticks, or other text.
+SPECIAL COTY & NUMBERED EDITIONS INSTRUCTION:
+- Check if this lighter is an official Collectible of the Year (COTY) or limited edition.
+- Look closely for any laser-engraved edition numbering sequence typically found on the side spine, bottom, or reverse face (e.g. 05761/20020 or 1234/12000). If present, output this exact string in "editionNumber".
 
 JSON FORMAT:
 {
   "name": "Full Official Model Name",
   "modelNumber": "5-digit catalog number or empty string",
+  "editionNumber": "Limited edition numbering if visible (e.g. 05761/20020), otherwise empty string",
   "year": "Exact year (e.g. 2023)",
   "tier": "COTY or ARMOR or VINTAGE or STANDARD",
   "stampDetails": "Full explanation of stamp (e.g. Manufactured in January 2023. Letter A on left = January; 23 on right = 2023; Bradford, PA Made in U.S.A.)",
@@ -725,7 +753,6 @@ JSON FORMAT:
           parts.push({ inline_data: { mime_type: 'image/jpeg', data: stampBase64 } });
         }
 
-        // Strictly post-3.1 versions
         const candidateModels = [
           'gemini-3.6-flash',
           'gemini-3.5-flash',
@@ -735,7 +762,6 @@ JSON FORMAT:
         let success = false;
         let lastError = null;
 
-        // Try the candidate models in rotation
         for (let attempt = 1; attempt <= 2; attempt++) {
           for (const model of candidateModels) {
             try {
@@ -757,6 +783,7 @@ JSON FORMAT:
 
               document.getElementById('formModel').value = parsed.name || "Custom Zippo";
               document.getElementById('formModelNum').value = parsed.modelNumber || "";
+              document.getElementById('formEditionNum').value = parsed.editionNumber || "";
               document.getElementById('formTier').value = parsed.tier || "STANDARD";
               document.getElementById('formStampDetails').value = parsed.stampDetails || "";
               document.getElementById('formFinish').value = parsed.finish || "";
@@ -793,6 +820,7 @@ JSON FORMAT:
       try {
         const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
         const modelNumber = document.getElementById('formModelNum').value.trim();
+        const editionNumber = document.getElementById('formEditionNum').value.trim();
         const tier = document.getElementById('formTier').value;
         const stampDetails = document.getElementById('formStampDetails').value.trim();
         const finish = document.getElementById('formFinish').value.trim();
@@ -814,7 +842,7 @@ JSON FORMAT:
           if (frontFile) frontImgUrl = await uploadImageToSupabase(frontFile, 'front');
           if (stampFile) stampImgUrl = await uploadImageToSupabase(stampFile, 'stamp');
 
-          const { error } = await supabaseClient.from('lighters').insert([{
+          const payload = {
             name,
             model_number: modelNumber,
             year,
@@ -826,8 +854,11 @@ JSON FORMAT:
             price,
             front_img: frontImgUrl,
             stamp_img: stampImgUrl
-          }]);
+          };
 
+          if (editionNumber) payload.edition_number = editionNumber;
+
+          const { error } = await supabaseClient.from('lighters').insert([payload]);
           if (error) throw error;
           await loadFromSupabase();
         } else {
@@ -835,6 +866,7 @@ JSON FORMAT:
             id: Date.now().toString(),
             name,
             modelNumber,
+            editionNumber,
             year,
             tier,
             stampDetails,
@@ -852,6 +884,7 @@ JSON FORMAT:
         closeScanModal();
         document.getElementById('frontPhotoInput').value = "";
         document.getElementById('stampPhotoInput').value = "";
+        document.getElementById('formEditionNum').value = "";
       } catch (err) {
         alert("Failed to save to cloud: " + err.message);
       } finally {
