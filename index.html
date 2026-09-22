@@ -34,11 +34,12 @@
           Close Windows (<span id="openWindowsCount">0</span>)
         </button>
         
-        <button id="authBtn" onclick="toggleProfileOrAuth()" class="text-[11px] bg-[#191b26] hover:bg-[#202333] px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 transition">
+        <!-- Profile / Auth Header Pill -->
+        <button id="authBtn" onclick="toggleProfileOrAuth()" class="text-[11px] bg-[#191b26] hover:bg-[#202333] px-2.5 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 transition">
           <div id="authBtnAvatar" class="w-4 h-4 rounded-full bg-amber-500/20 flex items-center justify-center overflow-hidden">
             <i class="fa-solid fa-user text-amber-400 text-[9px]"></i>
           </div>
-          <span id="authBtnLabel" class="text-gray-300">Sign In</span>
+          <span id="authBtnLabel" class="text-gray-300 font-semibold">Sign In</span>
         </button>
 
         <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white p-1">
@@ -151,7 +152,6 @@
 
     <!-- Collecting Tab Viewport -->
     <section id="collectingViewport" class="hidden space-y-4 pb-12">
-      <!-- Section Tabs -->
       <div class="flex bg-[#12131c] p-1 rounded-xl border border-white/10 text-xs font-bold">
         <button id="collectingTabGuideBtn" onclick="switchCollectingSubTab('GUIDE')" class="flex-1 py-1.5 rounded-lg bg-amber-500 text-black shadow transition">
           <i class="fa-solid fa-graduation-cap mr-1"></i> Intro & Grading Guide
@@ -178,7 +178,7 @@
               <i class="fa-solid fa-certificate"></i> Mint in Box (MIB)
             </span>
             <p class="text-[11px] text-gray-300 leading-relaxed">
-              Unfired, flint tube unstuck, original orange safety seal intact (or cleanly preserved), matching outer sleeve, and guarantee paperwork. Commands 100% of fair secondary comps.
+              Unfired, flint tube unstuck, original orange safety seal intact, matching sleeve, and paperwork. Commands 100% of fair secondary comps.
             </p>
           </div>
 
@@ -187,7 +187,7 @@
               <i class="fa-solid fa-fire-burner"></i> Excellent / Light User
             </span>
             <p class="text-[11px] text-gray-300 leading-relaxed">
-              Fired occasionally, clean wick chimney with light carbon, no deep hinge play or cam spring deformation. Typically 60%–75% of MIB valuation.
+              Fired occasionally, clean wick chimney with light carbon, tight hinge welds. Typically 60%–75% of MIB valuation.
             </p>
           </div>
 
@@ -196,16 +196,16 @@
               <i class="fa-solid fa-shield-halved"></i> What to Check: Hinge & Cam
             </span>
             <p class="text-[11px] text-gray-300 leading-relaxed">
-              Always inspect the barrel hinge. Factory welds should show clean circular spot marks without seam cracks. Loose "wobble" indicates heavy pocket carry.
+              Inspect the barrel hinge. Factory welds should show clean circular spot marks without seam cracks. Loose "wobble" indicates pocket wear.
             </p>
           </div>
 
           <div class="bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-1.5">
             <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-triangle-exclamation"></i> Red Flags: Restamps & Counterfeits
+              <i class="fa-solid fa-triangle-exclamation"></i> Red Flags: Restamps & Fakes
             </span>
             <p class="text-[11px] text-gray-300 leading-relaxed">
-              Watch for uneven laser-etched bottom stamps on pre-2000 models (originals were roll-stamped), mismatched insert date codes, or blurred Bradford PA lettering.
+              Watch for uneven laser-etched bottom stamps on pre-2000 models (originals were roll-stamped) or blurred Bradford PA lettering.
             </p>
           </div>
         </div>
@@ -221,9 +221,8 @@
         </div>
       </div>
 
-      <!-- Sub-Tab 2: Master Catalog & AI-Verified Watchlist -->
+      <!-- Sub-Tab 2: Master Catalog & Watchlist -->
       <div id="collectingWatchlistSection" class="hidden space-y-3">
-        <!-- Verified Catalog Search & AI Verification Gate -->
         <div class="card-surface p-3.5 rounded-2xl border border-white/10 space-y-3 relative">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
@@ -246,13 +245,12 @@
               </button>
             </div>
 
-            <!-- Live Typeahead Suggestions Dropdown -->
             <div id="refSuggestionsDropdown" class="hidden absolute top-11 inset-x-0 bg-[#161822] rounded-xl border border-white/15 shadow-2xl z-50 max-h-56 overflow-y-auto space-y-1 p-1"></div>
           </div>
-          <p class="text-[10px] text-gray-400 italic">Select from our verified catalog, or enter an obscure vintage/military piece and our AI appraiser will validate authenticity before tracking.</p>
+          <p class="text-[10px] text-gray-400 italic">Select from our verified catalog or enter any vintage piece to validate authenticity via AI.</p>
         </div>
 
-        <!-- Curated Master Grail Shelf (One-Click Track) -->
+        <!-- Curated Master Grail Shelf -->
         <div class="card-surface p-3.5 rounded-2xl border border-white/10 space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -300,30 +298,30 @@
     </div>
   </aside>
 
-  <!-- Bottom Navigation -->
+  <!-- Balanced Bottom Navigation Bar (Centered Scan + Market to the Right) -->
   <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
-    <button onclick="loadAppData()" class="flex flex-col items-center text-gray-400 hover:text-white">
-      <i class="fa-solid fa-rotate text-sm"></i>
-      <span class="text-[10px] mt-1">Sync</span>
-    </button>
-    <button onclick="switchMainView('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition">
-      <i class="fa-solid fa-boxes-stacked text-sm"></i>
+    <button onclick="switchMainView('VAULT')" id="navVaultBtn" class="flex flex-col items-center text-amber-500 font-semibold transition w-16">
+      <i class="fa-solid fa-boxes-stacked text-base"></i>
       <span class="text-[10px] mt-1">Vault</span>
     </button>
-    <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
-      <i class="fa-solid fa-camera text-lg"></i>
-    </button>
-    <button onclick="switchMainView('COLLECTING')" id="navCollectingBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition">
-      <i class="fa-solid fa-book-open text-sm"></i>
+    <button onclick="switchMainView('COLLECTING')" id="navCollectingBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16">
+      <i class="fa-solid fa-book-open text-base"></i>
       <span class="text-[10px] mt-1">Collecting</span>
     </button>
-    <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition">
-      <i class="fa-solid fa-store text-sm"></i>
+
+    <!-- Prominent Centered Scan Trigger -->
+    <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-13 h-13 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
+      <i class="fa-solid fa-camera text-xl"></i>
+    </button>
+
+    <!-- Market Placed Immediately Right of Scan -->
+    <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-16">
+      <i class="fa-solid fa-store text-base"></i>
       <span class="text-[10px] mt-1">Market</span>
     </button>
-    <button onclick="switchMainView('PROFILE')" id="navProfileBtn" class="flex flex-col items-center text-gray-400 hover:text-white transition">
-      <i class="fa-solid fa-user-gear text-sm"></i>
-      <span class="text-[10px] mt-1">Profile</span>
+    <button onclick="openCOTYModal()" id="navDropsBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16">
+      <i class="fa-solid fa-trophy text-base"></i>
+      <span class="text-[10px] mt-1">COTY Drops</span>
     </button>
   </nav>
 
@@ -598,6 +596,22 @@
     </div>
   </div>
 
+  <!-- COTY Archive Modal -->
+  <div id="cotyModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden p-4 border border-white/10 flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-trophy text-amber-400"></i> COTY & Limited Drops Archive
+          </h2>
+          <p class="text-[11px] text-gray-400">Tap any piece to see which community collectors own it.</p>
+        </div>
+        <button onclick="closeCOTYModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="cotyList" class="flex-1 overflow-y-auto space-y-2.5 my-3 pr-1"></div>
+    </div>
+  </div>
+
   <!-- Settings Modal -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
@@ -783,6 +797,7 @@
         myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
       }
 
+      // Fetch Global Market & Community Lighters
       const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
       if (marketData) publicMarketCollection = mapRows(marketData);
 
@@ -800,6 +815,7 @@
 
       updateAuthUI();
       renderCurrentView();
+      renderWatchlist();
     }
 
     function mapRows(data) {
@@ -829,87 +845,6 @@
       }));
     }
 
-    // View Switching
-    function switchMainView(mode) {
-      viewMode = mode;
-      const navVaultBtn = document.getElementById('navVaultBtn');
-      const navCollectingBtn = document.getElementById('navCollectingBtn');
-      const navMarketBtn = document.getElementById('navMarketBtn');
-      const navProfileBtn = document.getElementById('navProfileBtn');
-      const headerBadge = document.getElementById('headerViewBadge');
-      const topSearchControls = document.getElementById('topSearchControls');
-      const itemsGrid = document.getElementById('itemsGrid');
-      const emptyState = document.getElementById('emptyState');
-      const profileViewport = document.getElementById('profileViewport');
-      const collectingViewport = document.getElementById('collectingViewport');
-      const batchTray = document.getElementById('batchTray');
-
-      navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
-      navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
-      navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
-      navProfileBtn.className = "flex flex-col items-center text-gray-400 hover:text-white transition";
-
-      itemsGrid.classList.add('hidden');
-      profileViewport.classList.add('hidden');
-      collectingViewport.classList.add('hidden');
-      emptyState.classList.add('hidden');
-      batchTray.classList.add('hidden');
-
-      if (mode === 'VAULT') {
-        navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
-        headerBadge.innerText = "Vault";
-        headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
-        topSearchControls.classList.remove('hidden');
-        itemsGrid.classList.remove('hidden');
-        batchTray.classList.remove('hidden');
-        renderCurrentView();
-      } else if (mode === 'COLLECTING') {
-        navCollectingBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
-        headerBadge.innerText = "Collecting Guide";
-        headerBadge.className = "text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
-        topSearchControls.classList.add('hidden');
-        collectingViewport.classList.remove('hidden');
-        renderWatchlist();
-      } else if (mode === 'MARKET') {
-        navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition";
-        headerBadge.innerText = "Marketplace";
-        headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
-        topSearchControls.classList.remove('hidden');
-        itemsGrid.classList.remove('hidden');
-        renderCurrentView();
-      } else if (mode === 'PROFILE') {
-        if (!currentUser) return toggleAuthModal();
-        navProfileBtn.className = "flex flex-col items-center text-white font-semibold transition";
-        headerBadge.innerText = "Profile";
-        headerBadge.className = "text-[10px] font-semibold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full border border-white/20";
-        topSearchControls.classList.add('hidden');
-        profileViewport.classList.remove('hidden');
-        renderProfileView();
-      }
-    }
-
-    function switchCollectingSubTab(tab) {
-      currentCollectingTab = tab;
-      const b1 = document.getElementById('collectingTabGuideBtn');
-      const b2 = document.getElementById('collectingTabWatchlistBtn');
-      const gSection = document.getElementById('collectingGuideSection');
-      const wSection = document.getElementById('collectingWatchlistSection');
-
-      if (tab === 'GUIDE') {
-        b1.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
-        b2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
-        gSection.classList.remove('hidden');
-        wSection.classList.add('hidden');
-      } else {
-        b2.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
-        b1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
-        wSection.classList.remove('hidden');
-        gSection.classList.add('hidden');
-        renderWatchlist();
-      }
-    }
-
-    // Master Reference Catalog & Typeahead Logic
     function renderMasterGrailShelf() {
       const shelf = document.getElementById('masterGrailShelf');
       if (!shelf) return;
@@ -999,18 +934,14 @@
       }
     }
 
-    // AI Verification Gate for Custom / Vintage Searches
     async function verifyCustomPieceWithAI() {
       if (!currentUser) return toggleAuthModal();
       const inputEl = document.getElementById('refSearchInput');
       const userText = inputEl.value.trim();
       if (!userText) return alert("Please type a lighter name, model, or vintage military theme.");
 
-      // Check if exact match already exists in reference catalog
       const localMatch = referenceCatalog.find(r => r.title.toLowerCase() === userText.toLowerCase() || (r.sku && r.sku.toLowerCase() === userText.toLowerCase()));
-      if (localMatch) {
-        return trackReferenceItem(localMatch.id);
-      }
+      if (localMatch) return trackReferenceItem(localMatch.id);
 
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) return alert("Configure your Gemini API key in Config first.");
@@ -1066,7 +997,6 @@ Respond strictly in raw JSON with no formatting or backticks:
           return;
         }
 
-        // Validated by AI - Insert into Reference Table & Add to Watchlist
         const { data: newRef, error: refErr } = await supabaseClient.from('reference_lighters').insert([{
           title: parsed.normalizedTitle,
           sku: parsed.sku || '',
@@ -1098,6 +1028,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
+    // Community Grail Radar Matching Engine
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
       const badge = document.getElementById('watchlistCountBadge');
@@ -1111,11 +1042,29 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
 
       userWatchlist.forEach(w => {
-        const queryTerm = (w.model_sku || w.lighter_title).toLowerCase();
-        const matches = allCommunityLighters.filter(l => 
-          (l.modelNumber && l.modelNumber.toLowerCase().includes(queryTerm)) ||
-          l.name.toLowerCase().includes(queryTerm)
-        );
+        // Robust Matching: Match on exact SKU, reference ID, title substring, or year tokens
+        const titleTokens = w.lighter_title.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+        const skuToken = (w.model_sku || '').toLowerCase().trim();
+
+        const matches = allCommunityLighters.filter(l => {
+          // Exclude user's own pieces
+          if (currentUser && l.userId === currentUser.id) return false;
+
+          const lSku = (l.modelNumber || '').toLowerCase().trim();
+          const lName = (l.name || '').toLowerCase();
+
+          // 1. Direct SKU match
+          if (skuToken && lSku && (skuToken === lSku || lSku.includes(skuToken))) return true;
+
+          // 2. Tokenized matching on significant words (e.g. "2020", "vision", "coty")
+          if (titleTokens.length > 0) {
+            const matchesAllTokens = titleTokens.some(tok => lName.includes(tok));
+            if (matchesAllTokens && (l.year && w.lighter_title.includes(l.year))) return true;
+            if (lName.includes(w.lighter_title.toLowerCase())) return true;
+          }
+
+          return false;
+        });
 
         const card = document.createElement('div');
         card.className = "bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-2";
@@ -1133,7 +1082,6 @@ Respond strictly in raw JSON with no formatting or backticks:
             </button>
           </div>
 
-          <!-- Radar Match Status -->
           <div class="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px]">
             <span class="text-gray-400">Community Radar:</span>
             ${matches.length > 0 ? `
@@ -1168,7 +1116,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       loadAppData();
     }
 
-    // Flame Popover Tooltip
     function showFlameInfo(e) {
       if (e) e.stopPropagation();
       document.getElementById('flameInfoModal').classList.remove('hidden');
@@ -1177,7 +1124,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       document.getElementById('flameInfoModal').classList.add('hidden');
     }
 
-    // Friends Modal & Interactive Viewer
     function openFriendsModal() {
       if (!currentUser) return toggleAuthModal();
       const modal = document.getElementById('friendsModal');
@@ -1333,7 +1279,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       if (viewMode === 'VAULT') updateBatchTray();
     }
 
-    // Community Public Passport Modal
     function openPublicPassport(userId) {
       const profile = allPublicProfiles.find(p => p.id === userId);
       if (!profile) return alert("Profile not found.");
@@ -1433,7 +1378,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       alert(`Copied your FlameVault Passport link to clipboard:\n${link}`);
     }
 
-    // Trade Proposal Binder
     function openTradeProposal(targetItem) {
       if (!currentUser) return toggleAuthModal();
       activeTradeTarget = targetItem;
@@ -1503,7 +1447,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
-    // Inspection Window with Full Specs Restored
     function openInspectionWindow(id, isMarketView = false) {
       const source = isMarketView ? publicMarketCollection : myVaultCollection;
       const item = source.find(i => String(i.id) === String(id));
@@ -1781,6 +1724,10 @@ Respond strictly in raw JSON with no formatting or backticks:
             <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
           </div>
           <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
+            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
+          </div>
+          <div>
             <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
             <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
           </div>
@@ -1817,6 +1764,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       item.condition = document.getElementById(`edit_condition_${winId}`).value;
       item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
       item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
+      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
       item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
       item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
 
@@ -1829,6 +1777,7 @@ Respond strictly in raw JSON with no formatting or backticks:
           condition: item.condition,
           price: item.price,
           stamp_details: item.stampDetails,
+          market_notes: item.marketNotes,
           finish: item.finish,
           artwork: item.artwork
         };
@@ -2296,7 +2245,7 @@ Analyze the provided images. Return raw JSON:
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts }], generationConfig: { response_mime_type: "application/json", thinking_config: { thinking_budget: 0 } } })
+              body: JSON.stringify({ contents: [{ parts }], generationConfig: { response_mime_type: "application/json", thinking_budget: 0 } } })
             });
             const d = await res.json();
             if (d.error) throw new Error(d.error.message);
@@ -2356,6 +2305,39 @@ Analyze the provided images. Return raw JSON:
         closeScanModal();
       } catch (e) { alert("Save error: " + e.message); }
       finally { saveBtn.innerText = "Add to Vault"; saveBtn.disabled = false; }
+    }
+
+    function openCOTYModal() {
+      document.getElementById('cotyModal').classList.remove('hidden');
+      renderCOTYArchive();
+    }
+    function closeCOTYModal() { document.getElementById('cotyModal').classList.add('hidden'); }
+
+    function filterOwnersByCOTY(sku, name) {
+      closeCOTYModal();
+      switchMainView('MARKET');
+      document.getElementById('searchInput').value = sku || name;
+      renderCurrentView();
+    }
+
+    function renderCOTYArchive() {
+      const listEl = document.getElementById('cotyList');
+      listEl.innerHTML = '';
+      referenceCatalog.filter(r => r.tier === 'COTY').forEach(item => {
+        const ownerCount = allCommunityLighters.filter(l => (l.modelNumber && l.modelNumber.includes(item.sku)) || l.name.toLowerCase().includes(item.title.toLowerCase())).length;
+
+        const row = document.createElement('div');
+        row.className = "bg-[#12131c] rounded-xl p-3 border border-white/5 flex flex-col space-y-1.5 cursor-pointer hover:border-amber-500/30 transition";
+        row.onclick = () => filterOwnersByCOTY(item.sku, item.title);
+        row.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.year} - ${item.title}</span>
+            <span class="text-[9px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-500/30">${ownerCount} Collectors Own</span>
+          </div>
+          <p class="text-xs text-gray-400 leading-relaxed">${item.description}</p>
+        `;
+        listEl.appendChild(row);
+      });
     }
 
     initSupabase();
