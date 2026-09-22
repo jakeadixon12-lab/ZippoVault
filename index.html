@@ -596,22 +596,6 @@
     </div>
   </div>
 
-  <!-- COTY Archive Modal -->
-  <div id="cotyModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden p-4 border border-white/10 flex flex-col">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <div>
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-trophy text-amber-400"></i> COTY & Limited Drops Archive
-          </h2>
-          <p class="text-[11px] text-gray-400">Tap any piece to see which community collectors own it.</p>
-        </div>
-        <button onclick="closeCOTYModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <div id="cotyList" class="flex-1 overflow-y-auto space-y-2.5 my-3 pr-1"></div>
-    </div>
-  </div>
-
   <!-- Settings Modal -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
@@ -687,19 +671,19 @@
 
       if (currentUser) {
         const displayName = (userProfile && userProfile.username) || currentUser.email.split('@')[0];
-        authLabel.innerText = displayName;
-        currentUserEmail.innerText = currentUser.email;
-        loggedInView.classList.remove('hidden');
-        loggedOutView.classList.add('hidden');
+        if (authLabel) authLabel.innerText = displayName;
+        if (currentUserEmail) currentUserEmail.innerText = currentUser.email;
+        if (loggedInView) loggedInView.classList.remove('hidden');
+        if (loggedOutView) loggedOutView.classList.add('hidden');
 
-        if (userProfile && userProfile.avatar_url) {
+        if (userProfile && userProfile.avatar_url && authAvatar) {
           authAvatar.innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full object-cover">`;
         }
       } else {
-        authLabel.innerText = "Sign In";
-        authAvatar.innerHTML = `<i class="fa-solid fa-user text-amber-400 text-[9px]"></i>`;
-        loggedInView.classList.add('hidden');
-        loggedOutView.classList.remove('hidden');
+        if (authLabel) authLabel.innerText = "Sign In";
+        if (authAvatar) authAvatar.innerHTML = `<i class="fa-solid fa-user text-amber-400 text-[9px]"></i>`;
+        if (loggedInView) loggedInView.classList.add('hidden');
+        if (loggedOutView) loggedOutView.classList.remove('hidden');
       }
     }
 
@@ -708,9 +692,14 @@
       else toggleAuthModal();
     }
 
-    function toggleAuthModal() { document.getElementById('authModal').classList.toggle('hidden'); }
+    function toggleAuthModal() { 
+      const el = document.getElementById('authModal');
+      if (el) el.classList.toggle('hidden'); 
+    }
+    
     function toggleProfileEditModal() { 
       const modal = document.getElementById('profileEditModal');
+      if (!modal) return;
       modal.classList.toggle('hidden');
       if (userProfile && !modal.classList.contains('hidden')) {
         document.getElementById('editUsernameInput').value = userProfile.username || '';
@@ -763,66 +752,71 @@
     async function loadAppData() {
       if (!supabaseClient) return;
 
-      // 1. Fetch Master Reference Catalog
-      const { data: refData } = await supabaseClient.from('reference_lighters').select('*').order('created_at', { ascending: false });
-      if (refData) {
-        referenceCatalog = refData;
-        renderMasterGrailShelf();
-      }
-
-      if (currentUser) {
-        const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-        if (profile) userProfile = profile;
-        else {
-          const initial = { id: currentUser.id, username: currentUser.email.split('@')[0], vault_visibility: 'EVERYONE', allow_vault_offers: true };
-          await supabaseClient.from('profiles').insert([initial]);
-          userProfile = initial;
+      try {
+        // 1. Fetch Master Reference Catalog
+        const { data: refData } = await supabaseClient.from('reference_lighters').select('*').order('created_at', { ascending: false });
+        if (refData) {
+          referenceCatalog = refData;
+          renderMasterGrailShelf();
         }
 
-        const { data: vaultData } = await supabaseClient.from('lighters').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        if (vaultData) myVaultCollection = mapRows(vaultData);
+        if (currentUser) {
+          const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+          if (profile) userProfile = profile;
+          else {
+            const initial = { id: currentUser.id, username: currentUser.email.split('@')[0], vault_visibility: 'EVERYONE', allow_vault_offers: true };
+            await supabaseClient.from('profiles').insert([initial]);
+            userProfile = initial;
+          }
 
-        const { data: friends } = await supabaseClient.from('friendships').select('*').or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`).eq('status', 'ACCEPTED');
-        if (friends) friendsList = friends;
+          const { data: vaultData } = await supabaseClient.from('lighters').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+          if (vaultData) myVaultCollection = mapRows(vaultData);
 
-        const { data: vouches } = await supabaseClient.from('collector_vouches').select('*').eq('vouched_user_id', currentUser.id);
-        if (vouches) vouchesList = vouches;
+          const { data: friends } = await supabaseClient.from('friendships').select('*').or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`).eq('status', 'ACCEPTED');
+          if (friends) friendsList = friends;
 
-        const { data: watchData } = await supabaseClient.from('user_watchlists').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        if (watchData) userWatchlist = watchData;
+          const { data: vouches } = await supabaseClient.from('collector_vouches').select('*').eq('vouched_user_id', currentUser.id);
+          if (vouches) vouchesList = vouches;
 
-        renderProfileView();
+          const { data: watchData } = await supabaseClient.from('user_watchlists').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+          if (watchData) userWatchlist = watchData;
+
+          renderProfileView();
+          renderWatchlist();
+        } else {
+          myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
+        }
+
+        // Fetch Global Market & Community Lighters
+        const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
+        if (marketData) publicMarketCollection = mapRows(marketData);
+
+        const { data: allLighters } = await supabaseClient.from('lighters').select('*');
+        if (allLighters) allCommunityLighters = mapRows(allLighters);
+
+        const { data: allProfiles } = await supabaseClient.from('profiles').select('*');
+        if (allProfiles) allPublicProfiles = allProfiles;
+
+        const { data: sparksData } = await supabaseClient.from('lighter_sparks').select('lighter_id');
+        if (sparksData) {
+          sparksMap = {};
+          sparksData.forEach(s => { sparksMap[s.lighter_id] = (sparksMap[s.lighter_id] || 0) + 1; });
+        }
+
+        updateAuthUI();
+        renderCurrentView();
         renderWatchlist();
-      } else {
-        myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
+      } catch (err) {
+        console.error("loadAppData error caught:", err);
       }
-
-      // Fetch Global Market & Community Lighters
-      const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
-      if (marketData) publicMarketCollection = mapRows(marketData);
-
-      const { data: allLighters } = await supabaseClient.from('lighters').select('*');
-      if (allLighters) allCommunityLighters = mapRows(allLighters);
-
-      const { data: allProfiles } = await supabaseClient.from('profiles').select('*');
-      if (allProfiles) allPublicProfiles = allProfiles;
-
-      const { data: sparksData } = await supabaseClient.from('lighter_sparks').select('lighter_id');
-      if (sparksData) {
-        sparksMap = {};
-        sparksData.forEach(s => { sparksMap[s.lighter_id] = (sparksMap[s.lighter_id] || 0) + 1; });
-      }
-
-      updateAuthUI();
-      renderCurrentView();
-      renderWatchlist();
     }
 
     function mapRows(data) {
+      if (!Array.isArray(data)) return [];
       return data.map(row => ({
         id: row.id,
         userId: row.user_id,
-        name: row.name,
+        name: row.name || 'Untitled Zippo',
         modelNumber: row.model_number || '',
         editionNumber: row.edition_number || '',
         year: row.year || 'Modern',
@@ -843,6 +837,91 @@
         marketNotes: row.market_notes || '',
         lastAppraisedAt: row.last_appraised_at || row.created_at || new Date().toISOString()
       }));
+    }
+
+    // View Switching
+    function switchMainView(mode) {
+      viewMode = mode;
+      const navVaultBtn = document.getElementById('navVaultBtn');
+      const navCollectingBtn = document.getElementById('navCollectingBtn');
+      const navMarketBtn = document.getElementById('navMarketBtn');
+      const headerBadge = document.getElementById('headerViewBadge');
+      const topSearchControls = document.getElementById('topSearchControls');
+      const itemsGrid = document.getElementById('itemsGrid');
+      const emptyState = document.getElementById('emptyState');
+      const profileViewport = document.getElementById('profileViewport');
+      const collectingViewport = document.getElementById('collectingViewport');
+      const batchTray = document.getElementById('batchTray');
+
+      if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16";
+      if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition w-16";
+      if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition w-16";
+
+      if (itemsGrid) itemsGrid.classList.add('hidden');
+      if (profileViewport) profileViewport.classList.add('hidden');
+      if (collectingViewport) collectingViewport.classList.add('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+      if (batchTray) batchTray.classList.add('hidden');
+
+      if (mode === 'VAULT') {
+        if (navVaultBtn) navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-16";
+        if (headerBadge) {
+          headerBadge.innerText = "Vault";
+          headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
+        }
+        if (topSearchControls) topSearchControls.classList.remove('hidden');
+        if (itemsGrid) itemsGrid.classList.remove('hidden');
+        if (batchTray) batchTray.classList.remove('hidden');
+        renderCurrentView();
+      } else if (mode === 'COLLECTING') {
+        if (navCollectingBtn) navCollectingBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition w-16";
+        if (headerBadge) {
+          headerBadge.innerText = "Collecting Guide";
+          headerBadge.className = "text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
+        }
+        if (topSearchControls) topSearchControls.classList.add('hidden');
+        if (collectingViewport) collectingViewport.classList.remove('hidden');
+        renderWatchlist();
+      } else if (mode === 'MARKET') {
+        if (navMarketBtn) navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition w-16";
+        if (headerBadge) {
+          headerBadge.innerText = "Marketplace";
+          headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
+        }
+        if (topSearchControls) topSearchControls.classList.remove('hidden');
+        if (itemsGrid) itemsGrid.classList.remove('hidden');
+        renderCurrentView();
+      } else if (mode === 'PROFILE') {
+        if (!currentUser) return toggleAuthModal();
+        if (headerBadge) {
+          headerBadge.innerText = "Profile";
+          headerBadge.className = "text-[10px] font-semibold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full border border-white/20";
+        }
+        if (topSearchControls) topSearchControls.classList.add('hidden');
+        if (profileViewport) profileViewport.classList.remove('hidden');
+        renderProfileView();
+      }
+    }
+
+    function switchCollectingSubTab(tab) {
+      currentCollectingTab = tab;
+      const b1 = document.getElementById('collectingTabGuideBtn');
+      const b2 = document.getElementById('collectingTabWatchlistBtn');
+      const gSection = document.getElementById('collectingGuideSection');
+      const wSection = document.getElementById('collectingWatchlistSection');
+
+      if (tab === 'GUIDE') {
+        if (b1) b1.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
+        if (b2) b2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+        if (gSection) gSection.classList.remove('hidden');
+        if (wSection) wSection.classList.add('hidden');
+      } else {
+        if (b2) b2.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
+        if (b1) b1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+        if (wSection) wSection.classList.remove('hidden');
+        if (gSection) gSection.classList.add('hidden');
+        renderWatchlist();
+      }
     }
 
     function renderMasterGrailShelf() {
@@ -873,7 +952,8 @@
 
     function handleCatalogInput(query) {
       const dropdown = document.getElementById('refSuggestionsDropdown');
-      const q = query.trim().toLowerCase();
+      if (!dropdown) return;
+      const q = (query || '').trim().toLowerCase();
       if (!q) {
         dropdown.classList.add('hidden');
         return;
@@ -930,7 +1010,8 @@
       if (error) alert("Tracking error: " + error.message);
       else {
         loadAppData();
-        document.getElementById('refSuggestionsDropdown').classList.add('hidden');
+        const drop = document.getElementById('refSuggestionsDropdown');
+        if (drop) drop.classList.add('hidden');
       }
     }
 
@@ -1028,13 +1109,12 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
-    // Community Grail Radar Matching Engine
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
       const badge = document.getElementById('watchlistCountBadge');
       if (!container) return;
       container.innerHTML = '';
-      badge.innerText = `${userWatchlist.length} Tracked`;
+      if (badge) badge.innerText = `${userWatchlist.length} Tracked`;
 
       if (userWatchlist.length === 0) {
         container.innerHTML = `<div class="text-xs text-gray-500 py-8 text-center italic bg-[#12131c] rounded-xl border border-white/5">You aren't tracking any grails yet. Search our master catalog or tap + on any grail above!</div>`;
@@ -1042,25 +1122,21 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
 
       userWatchlist.forEach(w => {
-        // Robust Matching: Match on exact SKU, reference ID, title substring, or year tokens
-        const titleTokens = w.lighter_title.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+        const titleTokens = (w.lighter_title || '').toLowerCase().split(/\s+/).filter(t => t.length > 2);
         const skuToken = (w.model_sku || '').toLowerCase().trim();
 
         const matches = allCommunityLighters.filter(l => {
-          // Exclude user's own pieces
           if (currentUser && l.userId === currentUser.id) return false;
 
           const lSku = (l.modelNumber || '').toLowerCase().trim();
           const lName = (l.name || '').toLowerCase();
 
-          // 1. Direct SKU match
           if (skuToken && lSku && (skuToken === lSku || lSku.includes(skuToken))) return true;
 
-          // 2. Tokenized matching on significant words (e.g. "2020", "vision", "coty")
           if (titleTokens.length > 0) {
             const matchesAllTokens = titleTokens.some(tok => lName.includes(tok));
             if (matchesAllTokens && (l.year && w.lighter_title.includes(l.year))) return true;
-            if (lName.includes(w.lighter_title.toLowerCase())) return true;
+            if (lName.includes((w.lighter_title || '').toLowerCase())) return true;
           }
 
           return false;
@@ -1118,10 +1194,12 @@ Respond strictly in raw JSON with no formatting or backticks:
 
     function showFlameInfo(e) {
       if (e) e.stopPropagation();
-      document.getElementById('flameInfoModal').classList.remove('hidden');
+      const el = document.getElementById('flameInfoModal');
+      if (el) el.classList.remove('hidden');
     }
     function closeFlameInfoModal() {
-      document.getElementById('flameInfoModal').classList.add('hidden');
+      const el = document.getElementById('flameInfoModal');
+      if (el) el.classList.add('hidden');
     }
 
     function openFriendsModal() {
@@ -1130,57 +1208,62 @@ Respond strictly in raw JSON with no formatting or backticks:
       const container = document.getElementById('friendsListContainer');
       const countLabel = document.getElementById('friendsModalCount');
 
-      countLabel.innerText = friendsList.length;
-      container.innerHTML = '';
+      if (countLabel) countLabel.innerText = friendsList.length;
+      if (container) {
+        container.innerHTML = '';
+        if (friendsList.length === 0) {
+          container.innerHTML = `<div class="text-xs text-gray-500 py-8 text-center italic">No friends added yet. Browse the Live Market and tap on seller handles to add collector friends!</div>`;
+        } else {
+          friendsList.forEach(f => {
+            const friendUserId = (f.user_id === currentUser.id) ? f.friend_id : f.user_id;
+            const friendProfile = allPublicProfiles.find(p => p.id === friendUserId);
+            const friendName = friendProfile ? friendProfile.username : 'Collector';
+            const friendVaultItems = allCommunityLighters.filter(l => l.userId === friendUserId);
 
-      if (friendsList.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 py-8 text-center italic">No friends added yet. Browse the Live Market and tap on seller handles to add collector friends!</div>`;
-      } else {
-        friendsList.forEach(f => {
-          const friendUserId = (f.user_id === currentUser.id) ? f.friend_id : f.user_id;
-          const friendProfile = allPublicProfiles.find(p => p.id === friendUserId);
-          const friendName = friendProfile ? friendProfile.username : 'Collector';
-          const friendVaultItems = allCommunityLighters.filter(l => l.userId === friendUserId);
-
-          const row = document.createElement('div');
-          row.className = "bg-[#12131c] p-3 rounded-xl border border-white/5 flex items-center justify-between hover:border-blue-500/30 transition";
-          row.innerHTML = `
-            <div class="flex items-center gap-3 truncate">
-              <div class="w-10 h-10 rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
-                ${friendProfile && friendProfile.avatar_url ? `<img src="${friendProfile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-gray-500"></i>`}
+            const row = document.createElement('div');
+            row.className = "bg-[#12131c] p-3 rounded-xl border border-white/5 flex items-center justify-between hover:border-blue-500/30 transition";
+            row.innerHTML = `
+              <div class="flex items-center gap-3 truncate">
+                <div class="w-10 h-10 rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                  ${friendProfile && friendProfile.avatar_url ? `<img src="${friendProfile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-gray-500"></i>`}
+                </div>
+                <div class="truncate">
+                  <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                    ${friendName}
+                    <span class="text-[8px] bg-blue-500/20 text-blue-400 px-1 rounded">Friend</span>
+                  </h4>
+                  <p class="text-[10px] text-gray-400">${friendVaultItems.length} lighters in vault</p>
+                </div>
               </div>
-              <div class="truncate">
-                <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
-                  ${friendName}
-                  <span class="text-[8px] bg-blue-500/20 text-blue-400 px-1 rounded">Friend</span>
-                </h4>
-                <p class="text-[10px] text-gray-400">${friendVaultItems.length} lighters in vault</p>
-              </div>
-            </div>
-            <button onclick="closeFriendsModal(); openPublicPassport('${friendUserId}')" class="px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-bold rounded-lg border border-blue-500/30 flex items-center gap-1">
-              <span>View Vault</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-            </button>
-          `;
-          container.appendChild(row);
-        });
+              <button onclick="closeFriendsModal(); openPublicPassport('${friendUserId}')" class="px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-bold rounded-lg border border-blue-500/30 flex items-center gap-1">
+                <span>View Vault</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            `;
+            container.appendChild(row);
+          });
+        }
       }
 
-      modal.classList.remove('hidden');
+      if (modal) modal.classList.remove('hidden');
     }
 
     function closeFriendsModal() {
-      document.getElementById('friendsModal').classList.add('hidden');
+      const el = document.getElementById('friendsModal');
+      if (el) el.classList.add('hidden');
     }
 
     function renderCurrentView() {
       if (viewMode === 'PROFILE' || viewMode === 'COLLECTING') return;
 
       const grid = document.getElementById('itemsGrid');
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const filter = document.getElementById('filterTier').value;
+      const searchInput = document.getElementById('searchInput');
+      const filterTier = document.getElementById('filterTier');
+      const search = searchInput ? searchInput.value.toLowerCase() : '';
+      const filter = filterTier ? filterTier.value : 'ALL';
       const emptyState = document.getElementById('emptyState');
       const emptyStateText = document.getElementById('emptyStateText');
 
+      if (!grid) return;
       grid.innerHTML = '';
       const sourceList = (viewMode === 'VAULT') ? myVaultCollection : publicMarketCollection;
 
@@ -1194,12 +1277,14 @@ Respond strictly in raw JSON with no formatting or backticks:
       });
 
       if (filtered.length === 0) {
-        emptyState.classList.remove('hidden');
-        emptyStateText.innerText = (viewMode === 'VAULT') 
-          ? "No lighters in your vault. Tap Scan to add one." 
-          : "No active marketplace listings right now.";
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (emptyStateText) {
+          emptyStateText.innerText = (viewMode === 'VAULT') 
+            ? "No lighters in your vault. Tap Scan to add one." 
+            : "No active marketplace listings right now.";
+        }
       } else {
-        emptyState.classList.add('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
       }
 
       filtered.forEach(item => {
@@ -1292,59 +1377,68 @@ Respond strictly in raw JSON with no formatting or backticks:
       const isMe = currentUser && currentUser.id === userId;
       const isFriend = friendsList.some(f => (f.user_id === userId || f.friend_id === userId));
 
-      headerBox.innerHTML = `
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0">
-            ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xl text-gray-500"></i>`}
-          </div>
-          <div class="overflow-hidden">
-            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-              ${profile.username || 'Collector'}
-              <span class="text-[8px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">Verified</span>
-            </h3>
-            <p class="text-[11px] text-gray-400 truncate">${profile.bio || 'FlameVault lighter collector.'}</p>
-            <div class="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
-              <span><i class="fa-solid fa-location-dot text-amber-500"></i> ${profile.location || 'USA'}</span>
-              <span><i class="fa-solid fa-vault text-purple-400"></i> ${profile.vault_visibility}</span>
+      if (headerBox) {
+        headerBox.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0">
+              ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xl text-gray-500"></i>`}
+            </div>
+            <div class="overflow-hidden">
+              <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                ${profile.username || 'Collector'}
+                <span class="text-[8px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">Verified</span>
+              </h3>
+              <p class="text-[11px] text-gray-400 truncate">${profile.bio || 'FlameVault lighter collector.'}</p>
+              <div class="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
+                <span><i class="fa-solid fa-location-dot text-amber-500"></i> ${profile.location || 'USA'}</span>
+                <span><i class="fa-solid fa-vault text-purple-400"></i> ${profile.vault_visibility}</span>
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      }
 
       const userShowcase = allCommunityLighters.filter(l => l.userId === userId && l.inShowcase);
-      showcaseGrid.innerHTML = '';
-      if (userShowcase.length === 0) {
-        showcaseGrid.innerHTML = `<span class="col-span-3 text-xs text-gray-500 italic py-2">No showcase lighters pinned yet.</span>`;
-      } else {
-        userShowcase.forEach(l => {
-          const itemEl = document.createElement('div');
-          itemEl.className = "bg-[#161822] rounded-xl p-2 border border-white/10 text-center cursor-pointer active:scale-95 transition";
-          itemEl.onclick = () => { closePublicPassportModal(); openInspectionWindow(l.id, true); };
-          itemEl.innerHTML = `
-            <img src="${l.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
-            <h5 class="text-[10px] font-bold text-gray-200 truncate">${l.name}</h5>
-            <span class="text-[9px] font-extrabold text-amber-400">$${Number(l.price).toFixed(0)}</span>
-          `;
-          showcaseGrid.appendChild(itemEl);
-        });
+      if (showcaseGrid) {
+        showcaseGrid.innerHTML = '';
+        if (userShowcase.length === 0) {
+          showcaseGrid.innerHTML = `<span class="col-span-3 text-xs text-gray-500 italic py-2">No showcase lighters pinned yet.</span>`;
+        } else {
+          userShowcase.forEach(l => {
+            const itemEl = document.createElement('div');
+            itemEl.className = "bg-[#161822] rounded-xl p-2 border border-white/10 text-center cursor-pointer active:scale-95 transition";
+            itemEl.onclick = () => { closePublicPassportModal(); openInspectionWindow(l.id, true); };
+            itemEl.innerHTML = `
+              <img src="${l.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
+              <h5 class="text-[10px] font-bold text-gray-200 truncate">${l.name}</h5>
+              <span class="text-[9px] font-extrabold text-amber-400">$${Number(l.price).toFixed(0)}</span>
+            `;
+            showcaseGrid.appendChild(itemEl);
+          });
+        }
       }
 
-      friendBtn.onclick = () => sendFriendRequest(userId);
-      friendBtn.innerHTML = isFriend ? '<i class="fa-solid fa-check"></i> Friends' : '<i class="fa-solid fa-user-plus"></i> Add Friend';
-      vouchBtn.onclick = () => vouchCollector(userId);
+      if (friendBtn) {
+        friendBtn.onclick = () => sendFriendRequest(userId);
+        friendBtn.innerHTML = isFriend ? '<i class="fa-solid fa-check"></i> Friends' : '<i class="fa-solid fa-user-plus"></i> Add Friend';
+      }
+      if (vouchBtn) vouchBtn.onclick = () => vouchCollector(userId);
 
       if (isMe) {
-        friendBtn.classList.add('hidden');
-        vouchBtn.classList.add('hidden');
+        if (friendBtn) friendBtn.classList.add('hidden');
+        if (vouchBtn) vouchBtn.classList.add('hidden');
       } else {
-        friendBtn.classList.remove('hidden');
-        vouchBtn.classList.remove('hidden');
+        if (friendBtn) friendBtn.classList.remove('hidden');
+        if (vouchBtn) vouchBtn.classList.remove('hidden');
       }
 
-      modal.classList.remove('hidden');
+      if (modal) modal.classList.remove('hidden');
     }
 
-    function closePublicPassportModal() { document.getElementById('publicPassportModal').classList.add('hidden'); }
+    function closePublicPassportModal() { 
+      const el = document.getElementById('publicPassportModal');
+      if (el) el.classList.add('hidden'); 
+    }
 
     async function sendFriendRequest(friendId) {
       if (!currentUser) return toggleAuthModal();
@@ -1387,49 +1481,57 @@ Respond strictly in raw JSON with no formatting or backticks:
       const targetSummary = document.getElementById('tradeTargetSummary');
       const selector = document.getElementById('tradeVaultSelector');
 
-      targetSummary.innerHTML = `
-        <div class="flex items-center gap-2.5">
-          <img src="${targetItem.frontImg}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
-          <div>
-            <span class="text-[9px] text-amber-400 uppercase font-bold">Target Piece</span>
-            <h4 class="text-xs font-bold text-gray-100 truncate">${targetItem.name}</h4>
-            <span class="text-xs font-bold text-emerald-400">Valuation: $${Number(targetItem.listingPrice || targetItem.price).toFixed(2)}</span>
-          </div>
-        </div>
-      `;
-
-      selector.innerHTML = '';
-      if (myVaultCollection.length === 0) {
-        selector.innerHTML = `<span class="text-xs text-gray-500 italic py-2">Your vault is empty. You can still offer cash below.</span>`;
-      } else {
-        myVaultCollection.forEach(l => {
-          const row = document.createElement('div');
-          row.className = "flex items-center justify-between p-2 rounded-lg bg-[#191b26] border border-white/5 cursor-pointer hover:border-blue-500/40";
-          row.onclick = () => {
-            if (selectedTradeOfferIds.has(l.id)) selectedTradeOfferIds.delete(l.id);
-            else selectedTradeOfferIds.add(l.id);
-            row.classList.toggle('border-blue-500', selectedTradeOfferIds.has(l.id));
-            row.classList.toggle('bg-blue-500/10', selectedTradeOfferIds.has(l.id));
-          };
-          row.innerHTML = `
-            <div class="flex items-center gap-2 truncate">
-              <img src="${l.frontImg}" class="w-8 h-8 rounded object-cover bg-black/40">
-              <span class="text-xs text-gray-200 truncate">${l.name}</span>
+      if (targetSummary) {
+        targetSummary.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <img src="${targetItem.frontImg}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
+            <div>
+              <span class="text-[9px] text-amber-400 uppercase font-bold">Target Piece</span>
+              <h4 class="text-xs font-bold text-gray-100 truncate">${targetItem.name}</h4>
+              <span class="text-xs font-bold text-emerald-400">Valuation: $${Number(targetItem.listingPrice || targetItem.price).toFixed(2)}</span>
             </div>
-            <span class="text-xs font-bold text-emerald-400">$${Number(l.price).toFixed(0)}</span>
-          `;
-          selector.appendChild(row);
-        });
+          </div>
+        `;
       }
 
-      modal.classList.remove('hidden');
+      if (selector) {
+        selector.innerHTML = '';
+        if (myVaultCollection.length === 0) {
+          selector.innerHTML = `<span class="text-xs text-gray-500 italic py-2">Your vault is empty. You can still offer cash below.</span>`;
+        } else {
+          myVaultCollection.forEach(l => {
+            const row = document.createElement('div');
+            row.className = "flex items-center justify-between p-2 rounded-lg bg-[#191b26] border border-white/5 cursor-pointer hover:border-blue-500/40";
+            row.onclick = () => {
+              if (selectedTradeOfferIds.has(l.id)) selectedTradeOfferIds.delete(l.id);
+              else selectedTradeOfferIds.add(l.id);
+              row.classList.toggle('border-blue-500', selectedTradeOfferIds.has(l.id));
+              row.classList.toggle('bg-blue-500/10', selectedTradeOfferIds.has(l.id));
+            };
+            row.innerHTML = `
+              <div class="flex items-center gap-2 truncate">
+                <img src="${l.frontImg}" class="w-8 h-8 rounded object-cover bg-black/40">
+                <span class="text-xs text-gray-200 truncate">${l.name}</span>
+              </div>
+              <span class="text-xs font-bold text-emerald-400">$${Number(l.price).toFixed(0)}</span>
+            `;
+            selector.appendChild(row);
+          });
+        }
+      }
+
+      if (modal) modal.classList.remove('hidden');
     }
 
-    function closeTradeModal() { document.getElementById('tradeModal').classList.add('hidden'); }
+    function closeTradeModal() { 
+      const el = document.getElementById('tradeModal');
+      if (el) el.classList.add('hidden'); 
+    }
 
     async function submitTradeProposal() {
       if (!activeTradeTarget) return;
-      const cash = parseFloat(document.getElementById('tradeCashAdj').value) || 0;
+      const cashInput = document.getElementById('tradeCashAdj');
+      const cash = cashInput ? parseFloat(cashInput.value) || 0 : 0;
       const payload = {
         sender_id: currentUser.id,
         receiver_id: activeTradeTarget.userId,
@@ -1724,10 +1826,6 @@ Respond strictly in raw JSON with no formatting or backticks:
             <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
           </div>
           <div>
-            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
-            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
-          </div>
-          <div>
             <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
             <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
           </div>
@@ -1764,7 +1862,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       item.condition = document.getElementById(`edit_condition_${winId}`).value;
       item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
       item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
-      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
       item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
       item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
 
@@ -1777,7 +1874,6 @@ Respond strictly in raw JSON with no formatting or backticks:
           condition: item.condition,
           price: item.price,
           stamp_details: item.stampDetails,
-          market_notes: item.marketNotes,
           finish: item.finish,
           artwork: item.artwork
         };
@@ -1827,21 +1923,30 @@ Respond strictly in raw JSON with no formatting or backticks:
       const item = publicMarketCollection.find(i => String(i.id) === String(id));
       if (item) {
         currentInquiryItem = item;
-        document.getElementById('inquiryItemSummary').innerHTML = `
-          <img src="${item.frontImg || ''}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
-          <div>
-            <h4 class="text-xs font-bold text-gray-100 truncate">${item.name}</h4>
-            <p class="text-xs font-extrabold text-emerald-400 mt-0.5">Asking: $${Number(item.listingPrice).toFixed(2)}</p>
-          </div>
-        `;
-        document.getElementById('inquiryMessageInput').value = `Hi! I saw your ${item.name} on FlameVault for $${item.listingPrice}. Is this still available?`;
-        document.getElementById('inquiryModal').classList.remove('hidden');
+        const summary = document.getElementById('inquiryItemSummary');
+        const msg = document.getElementById('inquiryMessageInput');
+        const modal = document.getElementById('inquiryModal');
+        if (summary) {
+          summary.innerHTML = `
+            <img src="${item.frontImg || ''}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
+            <div>
+              <h4 class="text-xs font-bold text-gray-100 truncate">${item.name}</h4>
+              <p class="text-xs font-extrabold text-emerald-400 mt-0.5">Asking: $${Number(item.listingPrice).toFixed(2)}</p>
+            </div>
+          `;
+        }
+        if (msg) msg.value = `Hi! I saw your ${item.name} on FlameVault for $${item.listingPrice}. Is this still available?`;
+        if (modal) modal.classList.remove('hidden');
       }
     }
-    function closeInquiryModal() { document.getElementById('inquiryModal').classList.add('hidden'); }
+    function closeInquiryModal() { 
+      const el = document.getElementById('inquiryModal');
+      if (el) el.classList.add('hidden'); 
+    }
     function sendInquiryToSeller() {
       if (!currentInquiryItem) return;
-      const message = document.getElementById('inquiryMessageInput').value;
+      const msgInput = document.getElementById('inquiryMessageInput');
+      const message = msgInput ? msgInput.value : '';
       const subject = encodeURIComponent(`FlameVault Inquiry: ${currentInquiryItem.name}`);
       const body = encodeURIComponent(message);
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
@@ -1922,8 +2027,10 @@ Respond in raw JSON:
       if (!confirm(`Re-appraise current market values for ${count} selected lighter(s)?`)) return;
 
       const batchBtn = document.getElementById('batchAppraiseBtn');
-      const originalHtml = batchBtn.innerHTML;
-      batchBtn.disabled = true;
+      const originalHtml = batchBtn ? batchBtn.innerHTML : '';
+      if (batchBtn) {
+        batchBtn.disabled = true;
+      }
 
       const ids = Array.from(selectedIds);
       let successCount = 0;
@@ -1933,7 +2040,7 @@ Respond in raw JSON:
         const item = myVaultCollection.find(l => String(l.id) === String(id));
         if (!item) continue;
 
-        batchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${i + 1}/${count}</span>`;
+        if (batchBtn) batchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${i + 1}/${count}</span>`;
 
         try {
           const valData = await requestMarketValuation(item);
@@ -1956,8 +2063,10 @@ Respond in raw JSON:
       }
 
       loadAppData();
-      batchBtn.innerHTML = originalHtml;
-      batchBtn.disabled = false;
+      if (batchBtn) {
+        batchBtn.innerHTML = originalHtml;
+        batchBtn.disabled = false;
+      }
       alert(`Completed re-appraisal for ${successCount} of ${count} lighters.`);
     }
 
@@ -1997,36 +2106,47 @@ Respond in raw JSON:
 
     function renderProfileView() {
       if (!userProfile) return;
-      document.getElementById('profileUsernameDisplay').innerText = userProfile.username || 'Collector';
-      document.getElementById('profileBioDisplay').innerText = userProfile.bio || 'Curating rare Zippos & windproof lighters.';
-      document.getElementById('profileLocationDisplay').innerText = userProfile.location || 'United States';
-      document.getElementById('profileFriendsCount').innerText = friendsList.length;
-      document.getElementById('profileVouchCount').innerText = vouchesList.length;
+      const uEl = document.getElementById('profileUsernameDisplay');
+      const bEl = document.getElementById('profileBioDisplay');
+      const lEl = document.getElementById('profileLocationDisplay');
+      const fEl = document.getElementById('profileFriendsCount');
+      const vEl = document.getElementById('profileVouchCount');
+      if (uEl) uEl.innerText = userProfile.username || 'Collector';
+      if (bEl) bEl.innerText = userProfile.bio || 'Curating rare Zippos & windproof lighters.';
+      if (lEl) lEl.innerText = userProfile.location || 'United States';
+      if (fEl) fEl.innerText = friendsList.length;
+      if (vEl) vEl.innerText = vouchesList.length;
 
       const showcaseGrid = document.getElementById('showcaseShelfGrid');
       const showcaseItems = myVaultCollection.filter(i => i.inShowcase);
-      document.getElementById('showcaseCount').innerText = showcaseItems.length;
+      const sCount = document.getElementById('showcaseCount');
+      if (sCount) sCount.innerText = showcaseItems.length;
 
-      if (showcaseItems.length === 0) {
-        showcaseGrid.innerHTML = `<span class="text-xs text-gray-500 italic py-4">No lighters pinned to showcase yet. Open any lighter in your vault and toggle 'Showcase'.</span>`;
-      } else {
-        showcaseGrid.innerHTML = '';
-        showcaseItems.forEach(item => {
-          const itemEl = document.createElement('div');
-          itemEl.className = "flex-shrink-0 w-20 bg-[#12131c] rounded-xl p-1.5 border border-white/10 text-center cursor-pointer active:scale-95 transition";
-          itemEl.onclick = () => openInspectionWindow(item.id, false);
-          itemEl.innerHTML = `
-            <img src="${item.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
-            <h5 class="text-[10px] font-bold text-gray-200 truncate">${item.name}</h5>
-            <span class="text-[9px] font-extrabold text-amber-400">$${Number(item.price).toFixed(0)}</span>
-          `;
-          showcaseGrid.appendChild(itemEl);
-        });
+      if (showcaseGrid) {
+        if (showcaseItems.length === 0) {
+          showcaseGrid.innerHTML = `<span class="text-xs text-gray-500 italic py-4">No lighters pinned to showcase yet. Open any lighter in your vault and toggle 'Showcase'.</span>`;
+        } else {
+          showcaseGrid.innerHTML = '';
+          showcaseItems.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = "flex-shrink-0 w-20 bg-[#12131c] rounded-xl p-1.5 border border-white/10 text-center cursor-pointer active:scale-95 transition";
+            itemEl.onclick = () => openInspectionWindow(item.id, false);
+            itemEl.innerHTML = `
+              <img src="${item.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
+              <h5 class="text-[10px] font-bold text-gray-200 truncate">${item.name}</h5>
+              <span class="text-[9px] font-extrabold text-amber-400">$${Number(item.price).toFixed(0)}</span>
+            `;
+            showcaseGrid.appendChild(itemEl);
+          });
+        }
       }
 
-      document.getElementById('ledgerListingsCount').innerText = myVaultCollection.filter(i => i.isListed).length;
-      document.getElementById('ledgerSoldCount').innerText = myVaultCollection.filter(i => i.status === 'SOLD').length;
-      document.getElementById('ledgerBoughtCount').innerText = myVaultCollection.length;
+      const l1 = document.getElementById('ledgerListingsCount');
+      const l2 = document.getElementById('ledgerSoldCount');
+      const l3 = document.getElementById('ledgerBoughtCount');
+      if (l1) l1.innerText = myVaultCollection.filter(i => i.isListed).length;
+      if (l2) l2.innerText = myVaultCollection.filter(i => i.status === 'SOLD').length;
+      if (l3) l3.innerText = myVaultCollection.length;
       renderLedgerList();
     }
 
@@ -2036,19 +2156,20 @@ Respond in raw JSON:
       const t2 = document.getElementById('ledgerTabSold');
       const t3 = document.getElementById('ledgerTabBought');
 
-      t1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
-      t2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
-      t3.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      if (t1) t1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      if (t2) t2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      if (t3) t3.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
 
-      if (tab === 'LISTINGS') t1.className = "flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-      if (tab === 'SOLD') t2.className = "flex-1 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30";
-      if (tab === 'BOUGHT') t3.className = "flex-1 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30";
+      if (tab === 'LISTINGS' && t1) t1.className = "flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+      if (tab === 'SOLD' && t2) t2.className = "flex-1 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      if (tab === 'BOUGHT' && t3) t3.className = "flex-1 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30";
 
       renderLedgerList();
     }
 
     function renderLedgerList() {
       const container = document.getElementById('ledgerListContainer');
+      if (!container) return;
       container.innerHTML = '';
       let list = currentLedgerTab === 'LISTINGS' ? myVaultCollection.filter(i => i.isListed) : currentLedgerTab === 'SOLD' ? myVaultCollection.filter(i => i.status === 'SOLD') : myVaultCollection;
       if (list.length === 0) {
@@ -2086,12 +2207,18 @@ Respond in raw JSON:
 
     async function saveProfileSettings() {
       if (!currentUser) return;
+      const uInput = document.getElementById('editUsernameInput');
+      const lInput = document.getElementById('editLocationInput');
+      const bInput = document.getElementById('editBioInput');
+      const vInput = document.getElementById('editVaultVisibilityInput');
+      const aInput = document.getElementById('editAllowOffersInput');
+
       const updates = {
-        username: document.getElementById('editUsernameInput').value.trim() || userProfile.username,
-        location: document.getElementById('editLocationInput').value.trim(),
-        bio: document.getElementById('editBioInput').value.trim(),
-        vault_visibility: document.getElementById('editVaultVisibilityInput').value,
-        allow_vault_offers: document.getElementById('editAllowOffersInput').checked,
+        username: uInput ? uInput.value.trim() : (userProfile ? userProfile.username : 'Collector'),
+        location: lInput ? lInput.value.trim() : '',
+        bio: bInput ? bInput.value.trim() : '',
+        vault_visibility: vInput ? vInput.value : 'EVERYONE',
+        allow_vault_offers: aInput ? aInput.checked : true,
         updated_at: new Date().toISOString()
       };
       await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
@@ -2105,19 +2232,26 @@ Respond in raw JSON:
       updateWindowCountBadge();
     }
     function closeAllInspectionWindows() {
-      document.getElementById('floatingWindowsContainer').innerHTML = '';
+      const c = document.getElementById('floatingWindowsContainer');
+      if (c) c.innerHTML = '';
       windowCascadeOffset = 0;
       updateWindowCountBadge();
     }
     function updateWindowCountBadge() {
-      const count = document.getElementById('floatingWindowsContainer').children.length;
+      const c = document.getElementById('floatingWindowsContainer');
+      const count = c ? c.children.length : 0;
       const countBadge = document.getElementById('closeAllWindowsBtn');
       const countSpan = document.getElementById('openWindowsCount');
-      if (count > 0) { countBadge.classList.remove('hidden'); countSpan.innerText = count; }
-      else countBadge.classList.add('hidden');
+      if (count > 0) { 
+        if (countBadge) countBadge.classList.remove('hidden'); 
+        if (countSpan) countSpan.innerText = count; 
+      } else { 
+        if (countBadge) countBadge.classList.add('hidden'); 
+      }
     }
     function bringWindowToFront(el) { highestZIndex += 1; el.style.zIndex = highestZIndex; }
     function bindDraggable(windowEl, handleEl) {
+      if (!windowEl || !handleEl) return;
       let isDragging = false, startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
       function onStart(cx, cy) { isDragging = true; bringWindowToFront(windowEl); startX = cx; startY = cy; initialLeft = windowEl.offsetLeft; initialTop = windowEl.offsetTop; }
       function onMove(cx, cy) {
@@ -2139,22 +2273,29 @@ Respond in raw JSON:
       updateBatchTray();
     }
     function toggleSelectAll() {
-      if (document.getElementById('selectAllCheckbox').checked) myVaultCollection.forEach(item => selectedIds.add(item.id));
+      const el = document.getElementById('selectAllCheckbox');
+      if (el && el.checked) myVaultCollection.forEach(item => selectedIds.add(item.id));
       else selectedIds.clear();
       renderCurrentView();
     }
     function updateBatchTray() {
       const count = selectedIds.size;
-      document.getElementById('selectAllCheckbox').checked = count > 0 && count === myVaultCollection.length;
-      document.getElementById('selectCount').innerText = count > 0 ? `Selected (${count})` : `Select All (0)`;
+      const allCb = document.getElementById('selectAllCheckbox');
+      const sCount = document.getElementById('selectCount');
       const act = document.getElementById('batchActionButtons');
-      if (count > 0) { act.classList.remove('hidden'); act.classList.add('flex'); }
-      else { act.classList.add('hidden'); act.classList.remove('flex'); }
+      const sTot = document.getElementById('selectedTotal');
+
+      if (allCb) allCb.checked = count > 0 && count === myVaultCollection.length;
+      if (sCount) sCount.innerText = count > 0 ? `Selected (${count})` : `Select All (0)`;
+      if (act) {
+        if (count > 0) { act.classList.remove('hidden'); act.classList.add('flex'); }
+        else { act.classList.add('hidden'); act.classList.remove('flex'); }
+      }
       const sum = Array.from(selectedIds).reduce((acc, id) => {
         const found = myVaultCollection.find(i => String(i.id) === String(id));
         return acc + (found ? Number(found.price) : 0);
       }, 0);
-      document.getElementById('selectedTotal').innerText = `$${(count > 0 ? sum : myVaultCollection.reduce((a, b) => a + (Number(b.price) || 0), 0)).toFixed(2)}`;
+      if (sTot) sTot.innerText = `$${(count > 0 ? sum : myVaultCollection.reduce((a, b) => a + (Number(b.price) || 0), 0)).toFixed(2)}`;
     }
 
     async function deleteSelected() {
@@ -2169,11 +2310,21 @@ Respond in raw JSON:
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `vault.json`; a.click();
     }
 
-    function openScanModal() { document.getElementById('scanModal').classList.remove('hidden'); }
-    function closeScanModal() { document.getElementById('scanModal').classList.add('hidden'); }
-    function toggleSettingsModal() { document.getElementById('settingsModal').classList.toggle('hidden'); }
+    function openScanModal() { 
+      const el = document.getElementById('scanModal');
+      if (el) el.classList.remove('hidden'); 
+    }
+    function closeScanModal() { 
+      const el = document.getElementById('scanModal');
+      if (el) el.classList.add('hidden'); 
+    }
+    function toggleSettingsModal() { 
+      const el = document.getElementById('settingsModal');
+      if (el) el.classList.toggle('hidden'); 
+    }
     function saveAllSettings() {
-      const key = document.getElementById('apiKeyInput').value.trim();
+      const keyInput = document.getElementById('apiKeyInput');
+      const key = keyInput ? keyInput.value.trim() : '';
       if (key) localStorage.setItem('gemini_api_key_vault', key);
       alert("Key saved!"); toggleSettingsModal();
     }
@@ -2212,7 +2363,8 @@ Respond in raw JSON:
       const stampFile = document.getElementById('stampPhotoInput').files[0];
       if (!frontFile && !stampFile) return alert("Select at least 1 image.");
 
-      const runBtn = document.getElementById('runAiBtn'); runBtn.disabled = true;
+      const runBtn = document.getElementById('runAiBtn'); 
+      if (runBtn) runBtn.disabled = true;
       try {
         const parts = [{ text: `You are a certified Zippo lighter appraiser.
 Analyze the provided images. Return raw JSON:
@@ -2241,11 +2393,11 @@ Analyze the provided images. Return raw JSON:
         let parsed = null;
         for (const m of ACTIVE_GEMINI_MODELS) {
           try {
-            runBtn.innerText = `Scanning (${m.replace('gemini-', '')})...`;
+            if (runBtn) runBtn.innerText = `Scanning (${m.replace('gemini-', '')})...`;
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts }], generationConfig: { response_mime_type: "application/json", thinking_budget: 0 } } })
+              body: JSON.stringify({ contents: [{ parts }], generationConfig: { response_mime_type: "application/json", thinking_budget: 0 } })
             });
             const d = await res.json();
             if (d.error) throw new Error(d.error.message);
@@ -2266,12 +2418,20 @@ Analyze the provided images. Return raw JSON:
         document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
         document.getElementById('formPrice').value = parsed.price || 35.00;
       } catch (err) { alert(`Scan error: ${err.message}`); }
-      finally { runBtn.innerText = "Identify with AI"; runBtn.disabled = false; }
+      finally { 
+        if (runBtn) {
+          runBtn.innerText = "Identify with AI"; 
+          runBtn.disabled = false; 
+        }
+      }
     }
 
     async function saveLighterToVault() {
       const saveBtn = document.getElementById('saveVaultBtn');
-      saveBtn.innerText = "Saving..."; saveBtn.disabled = true;
+      if (saveBtn) {
+        saveBtn.innerText = "Saving..."; 
+        saveBtn.disabled = true;
+      }
       try {
         const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
         const modelNumber = document.getElementById('formModelNum').value.trim();
@@ -2304,43 +2464,24 @@ Analyze the provided images. Return raw JSON:
         }
         closeScanModal();
       } catch (e) { alert("Save error: " + e.message); }
-      finally { saveBtn.innerText = "Add to Vault"; saveBtn.disabled = false; }
+      finally { 
+        if (saveBtn) {
+          saveBtn.innerText = "Add to Vault"; 
+          saveBtn.disabled = false; 
+        }
+      }
     }
 
     function openCOTYModal() {
-      document.getElementById('cotyModal').classList.remove('hidden');
-      renderCOTYArchive();
-    }
-    function closeCOTYModal() { document.getElementById('cotyModal').classList.add('hidden'); }
-
-    function filterOwnersByCOTY(sku, name) {
-      closeCOTYModal();
-      switchMainView('MARKET');
-      document.getElementById('searchInput').value = sku || name;
-      renderCurrentView();
+      // Re-route to collecting guide or open archive modal
+      switchMainView('COLLECTING');
+      switchCollectingSubTab('WATCHLIST');
     }
 
-    function renderCOTYArchive() {
-      const listEl = document.getElementById('cotyList');
-      listEl.innerHTML = '';
-      referenceCatalog.filter(r => r.tier === 'COTY').forEach(item => {
-        const ownerCount = allCommunityLighters.filter(l => (l.modelNumber && l.modelNumber.includes(item.sku)) || l.name.toLowerCase().includes(item.title.toLowerCase())).length;
-
-        const row = document.createElement('div');
-        row.className = "bg-[#12131c] rounded-xl p-3 border border-white/5 flex flex-col space-y-1.5 cursor-pointer hover:border-amber-500/30 transition";
-        row.onclick = () => filterOwnersByCOTY(item.sku, item.title);
-        row.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.year} - ${item.title}</span>
-            <span class="text-[9px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-500/30">${ownerCount} Collectors Own</span>
-          </div>
-          <p class="text-xs text-gray-400 leading-relaxed">${item.description}</p>
-        `;
-        listEl.appendChild(row);
-      });
-    }
-
-    initSupabase();
+    // Initialize application safely
+    window.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+    });
   </script>
 </body>
 </html>
