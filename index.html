@@ -152,7 +152,7 @@
   <!-- Multi-Window Floating Container -->
   <div id="floatingWindowsContainer" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
 
-  <!-- Adaptive Batch Tray -->
+  <!-- Adaptive Batch Tray (Vault tab only) -->
   <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 px-4 py-2.5 flex items-center justify-between z-20 transition-all">
     <div class="flex items-center gap-2">
       <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
@@ -206,16 +206,13 @@
         </h3>
         <button onclick="closePublicPassportModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-
       <div id="passportHeaderBox" class="bg-[#12131c] rounded-xl p-3 border border-white/5 space-y-2"></div>
-
       <div>
         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <i class="fa-solid fa-crown text-amber-400"></i> Featured Showcase
         </h4>
         <div id="passportShowcaseGrid" class="grid grid-cols-3 gap-2"></div>
       </div>
-
       <div class="pt-2 border-t border-white/10 flex gap-2">
         <button id="passportFriendBtn" class="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow">
           <i class="fa-solid fa-user-plus"></i> Add Friend
@@ -236,26 +233,22 @@
         </h3>
         <button onclick="closeTradeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <div id="tradeTargetSummary" class="bg-[#12131c] p-2.5 rounded-lg border border-white/5"></div>
-
       <div>
-        <label class="block text-[10px] text-gray-400 uppercase tracking-wider mb-1">Select from your Vault to trade:</label>
+        <label class="block text-[10px] text-gray-400 uppercase tracking-wider mb-1">Select pieces from your Vault to trade:</label>
         <div id="tradeVaultSelector" class="max-h-36 overflow-y-auto space-y-1.5 pr-1"></div>
       </div>
-
       <div>
         <label class="block text-[10px] text-gray-400 uppercase tracking-wider mb-1">Cash Adjustment (Optional USD +/-)</label>
         <input type="number" id="tradeCashAdj" placeholder="e.g. 25.00" class="w-full bg-[#12131c] p-2 rounded text-xs text-emerald-400 font-bold border border-white/10">
       </div>
-
       <button onclick="submitTradeProposal()" class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-lg shadow">
         Send Trade Proposal
       </button>
     </div>
   </div>
 
-  <!-- Profile Settings & Privacy Editor Modal -->
+  <!-- Profile Settings Modal -->
   <div id="profileEditModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-3">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -278,7 +271,6 @@
           <label class="block text-[10px] text-gray-400 uppercase">Bio / Specialty</label>
           <textarea id="editBioInput" rows="2" class="w-full bg-[#12131c] p-2 rounded text-white border border-white/10 mt-1"></textarea>
         </div>
-
         <div class="pt-2 border-t border-white/10 space-y-2">
           <div>
             <label class="block text-[10px] text-amber-400 font-bold uppercase">Vault Visibility</label>
@@ -288,13 +280,11 @@
               <option value="HIDDEN">Hidden (Private)</option>
             </select>
           </div>
-
           <label class="flex items-center gap-2 cursor-pointer pt-1">
             <input type="checkbox" id="editAllowOffersInput" class="w-4 h-4 rounded accent-emerald-500">
             <span class="text-[11px] text-gray-300">Allow offers on unlisted vault pieces</span>
           </label>
         </div>
-
         <button onclick="saveProfileSettings()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg mt-3">
           Save Settings
         </button>
@@ -302,7 +292,7 @@
     </div>
   </div>
 
-  <!-- Marketplace Direct Offer/Inquiry Modal -->
+  <!-- Marketplace Direct Offer Modal -->
   <div id="inquiryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-3">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -416,6 +406,18 @@
           <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Stamp Decoding</label>
           <textarea id="formStampDetails" rows="2" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1"></textarea>
         </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Finish & Case Material</label>
+          <input type="text" id="formFinish" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Artwork Details</label>
+          <input type="text" id="formArtwork" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Market Analysis & Historical Comps</label>
+          <textarea id="formMarketNotes" rows="2" placeholder="Market sources and pricing history..." class="w-full bg-[#12131c] text-xs text-gray-300 p-2 rounded border border-white/10 mt-1"></textarea>
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Condition</label>
@@ -433,22 +435,6 @@
           Add to Vault
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- COTY Archive Modal -->
-  <div id="cotyModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden p-4 border border-white/10 flex flex-col">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <div>
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-trophy text-amber-400"></i> COTY & Limited Drops Archive
-          </h2>
-          <p class="text-[11px] text-gray-400">Tap any piece to see which community collectors own it.</p>
-        </div>
-        <button onclick="closeCOTYModal()" class="text-gray-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <div id="cotyList" class="flex-1 overflow-y-auto space-y-2.5 my-3 pr-1"></div>
     </div>
   </div>
 
@@ -483,7 +469,7 @@
     let allCommunityLighters = [];
     let friendsList = [];
     let vouchesList = [];
-    let sparksMap = {}; // lighter_id -> count
+    let sparksMap = {};
     let selectedIds = new Set();
     let highestZIndex = 50;
     let windowCascadeOffset = 0;
@@ -495,17 +481,6 @@
       'gemini-2.5-flash',
       'gemini-3.5-flash',
       'gemini-3.1-pro-preview'
-    ];
-
-    const COTY_ARCHIVE = [
-      { year: 2026, name: "Generations Armor COTY", sku: "47218", type: "COTY", limit: "5,000 Pcs", msrp: "$160.00", estMarket: "$180 - $220", details: "Armor High Polish Black Ice with deep carve geometric patterns." },
-      { year: 2025, name: "Keeper of the Flame 25th Anniv", sku: "46761", type: "COTY", limit: "4,000 Pcs", msrp: "$150.00", estMarket: "$175 - $210", details: "360-degree laser engraved commemorative." },
-      { year: 2024, name: "50 Years of Venetian COTY", sku: "46026", type: "COTY", limit: "5,000 Pcs", msrp: "$130.00", estMarket: "$150 - $190", details: "Armor Black Matte with laser Florentine micro-engraving." },
-      { year: 2023, name: "Zippo Car 75th Anniversary COTY", sku: "48691", type: "COTY", limit: "4,500 Pcs", msrp: "$120.00", estMarket: "$110 - $140", details: "High Polish Black with photo-image chrome relief." },
-      { year: 2022, name: "90th Anniversary Commemorative", sku: "49867", type: "COTY", limit: "30,000 Pcs", msrp: "$100.00", estMarket: "$115 - $150", details: "Heavy Armor High Polish Black Ice 3D deep carve." },
-      { year: 2020, name: "Z2 Vision Collectible of the Year", sku: "49272", type: "COTY", limit: "20,020 Pcs", msrp: "$100.00", estMarket: "$120 - $160", details: "Black Ice Armor with 360-degree laser engraving." },
-      { year: 2000, name: "Keeper of the Flame Millennium", sku: "20001", type: "COTY", limit: "Numbered Run", msrp: "$75.00", estMarket: "$120 - $155", details: "Antiqued Brass time-capsule themed packaging." },
-      { year: 1994, name: "D-Day 50th Anniversary Allied Heroes", sku: "19941", type: "COTY", limit: "Limited", msrp: "$50.00", estMarket: "$120 - $180", details: "Black crackle finish packaged in round WWII steel rations tin." }
     ];
 
     function initSupabase() {
@@ -591,6 +566,8 @@
       const email = document.getElementById('authEmailInput').value.trim();
       const password = document.getElementById('authPasswordInput').value.trim();
       if (!email || !password) return alert("Enter email and password.");
+      if (password.length < 6) return alert("Password must be 6+ chars.");
+
       const { error } = await supabaseClient.auth.signUp({ email, password });
       if (error) alert("Account error: " + error.message);
       else { alert("Account created!"); toggleAuthModal(); }
@@ -610,7 +587,6 @@
       if (!supabaseClient) return;
 
       if (currentUser) {
-        // Fetch Profiles
         const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
         if (profile) userProfile = profile;
         else {
@@ -619,11 +595,9 @@
           userProfile = initial;
         }
 
-        // Fetch Personal Vault
         const { data: vaultData } = await supabaseClient.from('lighters').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
         if (vaultData) myVaultCollection = mapRows(vaultData);
 
-        // Fetch Friends & Vouches
         const { data: friends } = await supabaseClient.from('friendships').select('*').or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`).eq('status', 'ACCEPTED');
         if (friends) friendsList = friends;
 
@@ -635,7 +609,6 @@
         myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
       }
 
-      // Fetch Global Market & Public Lighters
       const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
       if (marketData) publicMarketCollection = mapRows(marketData);
 
@@ -645,7 +618,6 @@
       const { data: allProfiles } = await supabaseClient.from('profiles').select('*');
       if (allProfiles) allPublicProfiles = allProfiles;
 
-      // Fetch Sparks
       const { data: sparksData } = await supabaseClient.from('lighter_sparks').select('lighter_id');
       if (sparksData) {
         sparksMap = {};
@@ -661,19 +633,19 @@
         id: row.id,
         userId: row.user_id,
         name: row.name,
-        modelNumber: row.model_number,
+        modelNumber: row.model_number || '',
         editionNumber: row.edition_number || '',
-        year: row.year,
-        tier: row.tier,
-        stampDetails: row.stamp_details,
-        finish: row.finish,
-        artwork: row.artwork,
-        condition: row.condition,
-        price: Number(row.price),
+        year: row.year || 'Modern',
+        tier: row.tier || 'STANDARD',
+        stampDetails: row.stamp_details || '',
+        finish: row.finish || '',
+        artwork: row.artwork || '',
+        condition: row.condition || 'Loose / Fired',
+        price: Number(row.price) || 0,
         status: row.status || 'VAULT',
         isListed: Boolean(row.is_listed),
         inShowcase: Boolean(row.in_showcase),
-        listingPrice: Number(row.listing_price || row.price),
+        listingPrice: Number(row.listing_price || row.price || 0),
         acceptsTrades: Boolean(row.accepts_trades),
         frontImg: row.front_img,
         stampImg: row.stamp_img,
@@ -778,11 +750,13 @@
               <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
               ${item.inShowcase ? `<span class="absolute top-1 left-14 bg-amber-500 text-black text-[8px] font-bold px-1 rounded flex items-center gap-0.5"><i class="fa-solid fa-crown text-[7px]"></i> Showcase</span>` : ''}
               ${item.isListed ? `<span class="absolute bottom-1 right-1 bg-emerald-500/90 text-black text-[8px] font-bold px-1 rounded">Listed</span>` : ''}
+              ${item.editionNumber ? `<span class="absolute bottom-1 left-1 bg-amber-500/90 text-black text-[8px] font-mono font-bold px-1 rounded truncate max-w-[85%]">${item.editionNumber}</span>` : ''}
               <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
               <img src="${displayImg}" alt="${item.name}" class="w-full h-full object-cover pointer-events-none">
             </div>
             <div>
               <h3 class="text-[11px] font-bold text-gray-100 truncate">${item.name}</h3>
+              <p class="text-[9px] text-amber-400/80 font-mono truncate">${item.modelNumber ? '#' + item.modelNumber : (item.year || '')}</p>
               <div class="flex items-center justify-between mt-0.5">
                 <span class="text-xs font-extrabold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
                 <span class="text-[9px] text-amber-400/90 flex items-center gap-0.5"><i class="fa-solid fa-fire text-[8px]"></i> ${sparksCount}</span>
@@ -790,7 +764,6 @@
             </div>
           `;
         } else {
-          // Market View with Seller Passport click
           const diff = item.listingPrice - item.price;
           const deltaBadge = diff < 0 
             ? `<span class="text-[8px] text-emerald-400 font-bold bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">-$${Math.abs(diff).toFixed(0)}</span>`
@@ -807,6 +780,7 @@
           card.innerHTML = `
             <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
               <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">FOR SALE</span>
+              ${item.editionNumber ? `<span class="absolute bottom-1 left-1 bg-amber-500/90 text-black text-[8px] font-mono font-bold px-1 rounded truncate max-w-[85%]">${item.editionNumber}</span>` : ''}
               <button onclick="event.stopPropagation(); sparkLighter('${item.id}')" class="spark-btn absolute bottom-1 right-1 bg-black/60 backdrop-blur text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/10 hover:scale-105 active:scale-95 transition">
                 <i class="fa-solid fa-fire"></i> ${sparksCount}
               </button>
@@ -818,9 +792,12 @@
                 ${deltaBadge}
               </div>
               <h3 class="text-[11px] font-bold text-gray-100 truncate">${item.name}</h3>
-              <button onclick="event.stopPropagation(); openPublicPassport('${item.userId}')" class="seller-passport-btn text-[9px] text-gray-400 hover:text-amber-400 flex items-center gap-1 truncate mt-0.5">
-                <i class="fa-solid fa-circle-user text-[8px] text-amber-500"></i> ${sellerName}
-              </button>
+              <div class="flex items-center justify-between text-[9px] text-gray-400 mt-0.5">
+                <span class="font-mono">${item.modelNumber ? '#' + item.modelNumber : item.year}</span>
+                <button onclick="event.stopPropagation(); openPublicPassport('${item.userId}')" class="seller-passport-btn text-gray-400 hover:text-amber-400 flex items-center gap-1 truncate">
+                  <i class="fa-solid fa-circle-user text-[8px] text-amber-500"></i> ${sellerName}
+                </button>
+              </div>
             </div>
           `;
         }
@@ -864,7 +841,6 @@
         </div>
       `;
 
-      // Render their showcase
       const userShowcase = allCommunityLighters.filter(l => l.userId === userId && l.inShowcase);
       showcaseGrid.innerHTML = '';
       if (userShowcase.length === 0) {
@@ -920,7 +896,6 @@
       if (!currentUser) return toggleAuthModal();
       const { error } = await supabaseClient.from('lighter_sparks').insert([{ lighter_id: lighterId, user_id: currentUser.id }]);
       if (error) {
-        // Unspark if already sparked
         await supabaseClient.from('lighter_sparks').delete().match({ lighter_id: lighterId, user_id: currentUser.id });
       }
       loadAppData();
@@ -933,7 +908,7 @@
       alert(`Copied your FlameVault Passport link to clipboard:\n${link}`);
     }
 
-    // Trade Proposal Binder Logic
+    // Trade Proposal Binder
     function openTradeProposal(targetItem) {
       if (!currentUser) return toggleAuthModal();
       activeTradeTarget = targetItem;
@@ -1003,7 +978,7 @@
       }
     }
 
-    // Inspection Card Rendering
+    // Comprehensive Inspection Window for Vault & Marketplace
     function openInspectionWindow(id, isMarketView = false) {
       const source = isMarketView ? publicMarketCollection : myVaultCollection;
       const item = source.find(i => String(i.id) === String(id));
@@ -1051,6 +1026,14 @@
             <button onclick="sparkLighter('${item.id}')" class="text-amber-400 hover:scale-110 p-1 text-xs transition">
               <i class="fa-solid fa-fire"></i> <span class="text-[10px]">${sparksCount}</span>
             </button>
+            ${!isMarketView ? `
+              <button onclick="reappraiseSingleLighter('${item.id}', '${winId}')" title="Re-Appraise Market Value" class="text-gray-400 hover:text-emerald-400 p-1 text-xs">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+              <button onclick="toggleCardEdit('${winId}', '${item.id}')" title="Edit Lighter" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
+                <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen-to-square'}"></i>
+              </button>
+            ` : ''}
             <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
               <i class="fa-solid fa-xmark text-sm"></i>
             </button>
@@ -1058,57 +1041,7 @@
         </div>
 
         <div class="p-3.5 overflow-y-auto space-y-3">
-          ${!isMarketView ? `
-            <div class="bg-gradient-to-r from-amber-950/20 via-[#12131c] to-emerald-950/20 p-2.5 rounded-xl border border-white/10 space-y-2">
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" onchange="toggleShowcasePin('${item.id}')" ${item.inShowcase ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-amber-500">
-                  <span class="text-[11px] font-bold text-amber-400 flex items-center gap-1"><i class="fa-solid fa-crown text-[9px]"></i> Showcase</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
-                  <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-store text-[9px]"></i> For Sale</span>
-                </label>
-              </div>
-            </div>
-          ` : `
-            <div class="bg-gradient-to-r from-[#161a29] to-[#12131c] p-3 rounded-xl border border-emerald-500/40 space-y-2">
-              <div class="flex items-center justify-between pb-1.5 border-b border-white/10">
-                <span class="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
-                  <i class="fa-solid fa-scale-balanced"></i> Fair Comp Spread
-                </span>
-                ${item.acceptsTrades ? `<span class="text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-bold border border-blue-500/30">Accepts Trades</span>` : ''}
-              </div>
-              <div class="grid grid-cols-2 gap-3 pt-0.5">
-                <div>
-                  <span class="text-[9px] text-gray-400 uppercase block">Asking Price</span>
-                  <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>                 </div>                 <div>                   <span class="text-[9px] text-gray-400 uppercase block">AI Comp</span>                   <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          `}
-
-          <!-- Stamp Decoded Badge -->
-          <div class="flex items-center justify-between bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/5 text-[10px]">
-            <span class="text-emerald-400 font-bold flex items-center gap-1"><i class="fa-solid fa-check-double"></i> AI Verified Bottom Stamp</span>
-            <span class="font-mono text-gray-300">${item.year || 'Modern'}</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
-              <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
-              <img src="${item.frontImg || ''}" class="w-full h-full object-cover">
-            </div>
-            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative flex items-center justify-center">
-              <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Stamp</span>
-              ${item.stampImg ? `<img src="${item.stampImg}" class="w-full h-full object-cover">` : '<span class="text-[10px] text-gray-500">No Photo</span>'}
-            </div>
-          </div>
-
-          <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1">
-            <h4 class="text-[10px] font-bold text-amber-400 uppercase">Stamp Decoding Breakdown</h4>
-            <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
-          </div>
+          ${isEditing ? renderEditForm(item, winId) : renderViewDetails(item, winId, extraImages, isMarketView, askingPrice, appraisedPrice, priceDiff)}
         </div>
 
         ${isMarketView ? `
@@ -1126,41 +1059,479 @@
       bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
     }
 
-    // COTY Community Owner Filter
-    function filterOwnersByCOTY(sku, name) {
-      closeCOTYModal();
-      switchMainView('MARKET');
-      document.getElementById('searchInput').value = sku || name;
-      renderCurrentView();
-    }
+    function renderViewDetails(item, winId, extraImages, isMarketView, askingPrice, appraisedPrice, priceDiff) {
+      const appraisalDate = item.lastAppraisedAt ? new Date(item.lastAppraisedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Initial Scan';
 
-    function renderCOTYArchive() {
-      const listEl = document.getElementById('cotyList');
-      listEl.innerHTML = '';
-      COTY_ARCHIVE.forEach(item => {
-        const ownerCount = allCommunityLighters.filter(l => (l.modelNumber && l.modelNumber.includes(item.sku)) || l.name.toLowerCase().includes(item.name.toLowerCase())).length;
+      return `
+        <!-- Listing & Showcase Controls for Owner vs Floor Spread for Buyer -->
+        ${!isMarketView ? `
+          <div class="bg-gradient-to-r from-amber-950/20 via-[#12131c] to-emerald-950/20 p-2.5 rounded-xl border border-white/10 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" onchange="toggleShowcasePin('${item.id}')" ${item.inShowcase ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-amber-500">
+                <span class="text-[11px] font-bold text-amber-400 flex items-center gap-1"><i class="fa-solid fa-crown text-[9px]"></i> Showcase</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" id="listingToggle_${winId}" onchange="toggleListingStatus('${item.id}', '${winId}')" ${item.isListed ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
+                <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-store text-[9px]"></i> For Sale</span>
+              </label>
+            </div>
 
-        const row = document.createElement('div');
-        row.className = "bg-[#12131c] rounded-xl p-3 border border-white/5 flex flex-col space-y-1.5 cursor-pointer hover:border-amber-500/30 transition";
-        row.onclick = () => filterOwnersByCOTY(item.sku, item.name);
-        row.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.year} - ${item.name}</span>
-            <span class="text-[9px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-500/30">${ownerCount} Collectors Own</span>
+            <div id="listingOptions_${winId}" class="${item.isListed ? '' : 'hidden'} grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+              <div>
+                <label class="block text-[9px] text-gray-400 uppercase">Asking Price ($)</label>
+                <input type="number" id="marketPrice_${winId}" value="${item.listingPrice || item.price}" onchange="updateListingPrice('${item.id}', '${winId}')" class="w-full bg-[#0d0e15] text-xs font-bold text-emerald-400 p-1.5 rounded border border-white/10 mt-0.5">
+              </div>
+              <div class="flex flex-col justify-end">
+                <label class="flex items-center gap-1.5 cursor-pointer pb-2">
+                  <input type="checkbox" id="tradesToggle_${winId}" onchange="updateTradeStatus('${item.id}', '${winId}')" ${item.acceptsTrades ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-emerald-500">
+                  <span class="text-[10px] text-gray-300">Accept Trades</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <p class="text-xs text-gray-400 leading-relaxed">${item.details}</p>
+        ` : `
+          <div class="bg-gradient-to-r from-[#161a29] to-[#12131c] p-3 rounded-xl border border-emerald-500/40 space-y-2">
+            <div class="flex items-center justify-between pb-1.5 border-b border-white/10">
+              <span class="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-scale-balanced"></i> Fair Comp Spread
+              </span>
+              ${item.acceptsTrades ? `<span class="text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-bold border border-blue-500/30">Accepts Trades</span>` : ''}
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-0.5">
+              <div>
+                <span class="text-[9px] text-gray-400 uppercase block">Asking Price</span>
+                <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>               </div>               <div>                 <span class="text-[9px] text-gray-400 uppercase block">AI Comp</span>                 <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="text-[10px] pt-1 border-t border-white/5 flex items-center justify-between">
+              <span class="text-gray-400">Valuation Spread:</span>
+              <span class="font-bold ${priceDiff <= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${priceDiff < 0 ? `Save $${Math.abs(priceDiff).toFixed(2)} (Below Comp)` : priceDiff > 0 ? `+$${priceDiff.toFixed(2)} (Premium)` : 'Fair Comp'}
+              </span>
+            </div>
+          </div>
+        `}
+
+        <!-- Special Limited / COTY Make Number -->
+        ${item.editionNumber ? `
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+            <span class="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-award"></i> Edition / Make Number
+            </span>
+            <span class="text-xs font-mono font-extrabold text-amber-300 tracking-wider">${item.editionNumber}</span>
+          </div>
+        ` : ''}
+
+        <!-- Dual Primary Photos -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
+            <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
+            <img src="${item.frontImg || ''}" class="w-full h-full object-cover">
+          </div>
+          <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative flex items-center justify-center">
+            <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Stamp</span>
+            ${item.stampImg ? `<img src="${item.stampImg}" class="w-full h-full object-cover">` : '<span class="text-[10px] text-gray-500">No Photo</span>'}
+          </div>
+        </div>
+
+        <!-- Packaging & Gallery Photos -->
+        <div class="bg-[#12131c] p-2 rounded-lg border border-white/5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[9px] uppercase font-bold text-gray-400 flex items-center gap-1">
+              <i class="fa-solid fa-images text-amber-400"></i> Gallery & Packaging (${extraImages.length})
+            </span>
+            ${!isMarketView ? `
+              <label class="cursor-pointer text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-plus"></i> Add Photo
+                <input type="file" accept="image/*" class="hidden" onchange="uploadExtraPhoto('${item.id}', '${winId}', this)">
+              </label>
+            ` : ''}
+          </div>
+          
+          <div class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+            ${extraImages.length === 0 ? '<span class="text-[10px] text-gray-500 py-2 italic">No additional photos uploaded.</span>' : ''}
+            ${extraImages.map((imgUrl, idx) => `
+              <div class="relative flex-shrink-0 w-14 h-14 bg-black/40 rounded border border-white/10 overflow-hidden group">
+                <img src="${imgUrl}" class="w-full h-full object-cover">
+                ${!isMarketView ? `
+                  <button onclick="removeExtraPhoto('${item.id}', '${winId}', ${idx})" class="absolute top-0.5 right-0.5 bg-black/80 text-red-400 hover:text-red-300 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px]">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Specs & Hardware Overview -->
+        <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Year & Tier</span>
+            <span class="text-xs font-bold text-gray-200">${item.year || 'Modern'} • ${item.tier}</span>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Condition</span>
+            <span class="text-xs text-gray-200 font-medium">${item.condition || 'Loose / Fired'}</span>
+          </div>
+        </div>
+
+        <!-- Secondary Market Analysis & Comps -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+          <h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Market Intelligence & Comps</span>
+            <span class="text-[8px] text-gray-400 font-mono">Appraised ${appraisalDate}</span>
+          </h4>
+          <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Secondary market value estimated based on verified eBay sold listings, collector forum benchmarks, and condition tier.'}</p>
+        </div>
+
+        <!-- Stamp Decoding Breakdown -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1">
+          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
+          </h4>
+          <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
+        </div>
+
+        <!-- Design Specs, Finish, and Artwork -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
+          </h4>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
+            <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard catalog release'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Finish & Metal:</span>
+            <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
+            <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEditForm(item, winId) {
+      return `
+        <div class="space-y-2.5 text-left">
+          <div class="flex items-center justify-between border-b border-white/10 pb-1">
+            <span class="text-xs font-bold text-amber-400 uppercase">Edit Lighter Details</span>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Model / Name</label>
+            <input type="text" id="edit_name_${winId}" value="${item.name}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Catalog SKU #</label>
+              <input type="text" id="edit_modelNum_${winId}" value="${item.modelNumber || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+            </div>
+            <div>
+              <label class="block text-[9px] text-amber-400 uppercase">COTY Edition #</label>
+              <input type="text" id="edit_editionNum_${winId}" value="${item.editionNumber || ''}" placeholder="05761/20020" class="w-full bg-[#12131c] text-xs text-amber-300 font-mono p-1.5 rounded border border-amber-500/30 mt-0.5">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Tier</label>
+              <select id="edit_tier_${winId}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+                <option value="STANDARD" ${item.tier === 'STANDARD' ? 'selected' : ''}>Standard</option>
+                <option value="COTY" ${item.tier === 'COTY' ? 'selected' : ''}>COTY</option>
+                <option value="ARMOR" ${item.tier === 'ARMOR' ? 'selected' : ''}>Armor</option>
+                <option value="VINTAGE" ${item.tier === 'VINTAGE' ? 'selected' : ''}>Vintage</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Condition</label>
+              <select id="edit_condition_${winId}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+                <option value="Loose / Fired" ${item.condition === 'Loose / Fired' ? 'selected' : ''}>Loose / Fired</option>
+                <option value="Mint in Box" ${item.condition === 'Mint in Box' ? 'selected' : ''}>Mint in Box</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Estimated Value ($)</label>
+            <input type="number" id="edit_price_${winId}" value="${item.price}" class="w-full bg-[#12131c] text-xs text-emerald-400 font-bold p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Stamp & Date Breakdown</label>
+            <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
+            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
+            <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Artwork Details</label>
+            <input type="text" id="edit_artwork_${winId}" value="${item.artwork || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button onclick="saveCardEdit('${item.id}', '${winId}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs rounded">Save Changes</button>
+            <button onclick="toggleCardEdit('${winId}', '${item.id}')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs rounded">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleCardEdit(winId, itemId) {
+      const windowEl = document.getElementById(winId);
+      if (!windowEl) return;
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const isCurrentlyEditing = windowEl.querySelector(`#edit_name_${winId}`) !== null;
+      renderWindowContent(windowEl, winId, item, !isCurrentlyEditing, false);
+    }
+
+    async function saveCardEdit(itemId, winId) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      item.name = document.getElementById(`edit_name_${winId}`).value.trim() || item.name;
+      item.modelNumber = document.getElementById(`edit_modelNum_${winId}`).value.trim();
+      item.editionNumber = document.getElementById(`edit_editionNum_${winId}`).value.trim();
+      item.tier = document.getElementById(`edit_tier_${winId}`).value;
+      item.condition = document.getElementById(`edit_condition_${winId}`).value;
+      item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
+      item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
+      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
+      item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
+      item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
+
+      if (supabaseClient && currentUser) {
+        const payload = {
+          name: item.name,
+          model_number: item.modelNumber,
+          edition_number: item.editionNumber,
+          tier: item.tier,
+          condition: item.condition,
+          price: item.price,
+          stamp_details: item.stampDetails,
+          market_notes: item.marketNotes,
+          finish: item.finish,
+          artwork: item.artwork
+        };
+        await supabaseClient.from('lighters').update(payload).eq('id', item.id);
+      }
+
+      loadAppData();
+      const windowEl = document.getElementById(winId);
+      if (windowEl) renderWindowContent(windowEl, winId, item, false, false);
+    }
+
+    async function toggleShowcasePin(itemId) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+      item.inShowcase = !item.inShowcase;
+      await supabaseClient.from('lighters').update({ in_showcase: item.inShowcase }).eq('id', item.id);
+      loadAppData();
+    }
+
+    async function toggleListingStatus(itemId, winId) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+      item.isListed = !item.isListed;
+      await supabaseClient.from('lighters').update({ is_listed: item.isListed, listing_price: item.price }).eq('id', item.id);
+      loadAppData();
+    }
+
+    async function updateListingPrice(itemId, winId) {
+      const priceVal = parseFloat(document.getElementById(`marketPrice_${winId}`).value);
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item || isNaN(priceVal)) return;
+      item.listingPrice = priceVal;
+      await supabaseClient.from('lighters').update({ listing_price: item.listingPrice }).eq('id', item.id);
+      loadAppData();
+    }
+
+    async function updateTradeStatus(itemId, winId) {
+      const isTradeOk = document.getElementById(`tradesToggle_${winId}`).checked;
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+      item.acceptsTrades = isTradeOk;
+      await supabaseClient.from('lighters').update({ accepts_trades: item.acceptsTrades }).eq('id', item.id);
+      loadAppData();
+    }
+
+    function openMarketInquiryById(id) {
+      const item = publicMarketCollection.find(i => String(i.id) === String(id));
+      if (item) {
+        currentInquiryItem = item;
+        document.getElementById('inquiryItemSummary').innerHTML = `
+          <img src="${item.frontImg || ''}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
+          <div>
+            <h4 class="text-xs font-bold text-gray-100 truncate">${item.name}</h4>
+            <p class="text-xs font-extrabold text-emerald-400 mt-0.5">Asking: $${Number(item.listingPrice).toFixed(2)}</p>
+          </div>
         `;
-        listEl.appendChild(row);
-      });
+        document.getElementById('inquiryMessageInput').value = `Hi! I saw your ${item.name} on FlameVault for $${item.listingPrice}. Is this still available?`;
+        document.getElementById('inquiryModal').classList.remove('hidden');
+      }
+    }
+    function closeInquiryModal() { document.getElementById('inquiryModal').classList.add('hidden'); }
+    function sendInquiryToSeller() {
+      if (!currentInquiryItem) return;
+      const message = document.getElementById('inquiryMessageInput').value;
+      const subject = encodeURIComponent(`FlameVault Inquiry: ${currentInquiryItem.name}`);
+      const body = encodeURIComponent(message);
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      closeInquiryModal();
     }
 
-    function openCOTYModal() {
-      document.getElementById('cotyModal').classList.remove('hidden');
-      renderCOTYArchive();
-    }
-    function closeCOTYModal() { document.getElementById('cotyModal').classList.add('hidden'); }
+    async function requestMarketValuation(item) {
+      const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
+      if (!apiKey) throw new Error("Missing Gemini API Key in Config");
 
-    // Helpers
+      const prompt = `You are a certified Zippo lighter appraiser.
+Provide an updated secondary market valuation for this lighter:
+- Model Name: "${item.name}"
+- Catalog SKU: "${item.modelNumber || 'N/A'}"
+- Edition Number: "${item.editionNumber || 'N/A'}"
+- Year: "${item.year || 'Modern'}"
+- Condition: "${item.condition}"
+Respond in raw JSON:
+{
+  "price": number,
+  "marketNotes": "Concise comp breakdown based on eBay completed sales."
+}`;
+
+      for (const model of ACTIVE_GEMINI_MODELS) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { response_mime_type: "application/json", thinking_config: { thinking_budget: 0 } }
+            })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+          return JSON.parse(data.candidates[0].content.parts[0].text);
+        } catch (err) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+      throw new Error("Valuation service busy. Please try again.");
+    }
+
+    async function reappraiseSingleLighter(itemId, winId) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const windowEl = document.getElementById(winId);
+      const refreshBtn = windowEl ? windowEl.querySelector('button[title="Re-Appraise Market Value"]') : null;
+      if (refreshBtn) refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-emerald-400"></i>';
+
+      try {
+        const valData = await requestMarketValuation(item);
+        item.price = Number(valData.price) || item.price;
+        item.marketNotes = valData.marketNotes || item.marketNotes;
+        item.lastAppraisedAt = new Date().toISOString();
+
+        if (supabaseClient && currentUser) {
+          await supabaseClient.from('lighters').update({
+            price: item.price,
+            market_notes: item.marketNotes,
+            last_appraised_at: item.lastAppraisedAt
+          }).eq('id', item.id);
+        }
+
+        loadAppData();
+        if (windowEl) renderWindowContent(windowEl, winId, item, false, false);
+      } catch (err) {
+        alert("Valuation update failed: " + err.message);
+      } finally {
+        if (refreshBtn) refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+      }
+    }
+
+    async function batchReappraiseSelected() {
+      if (selectedIds.size === 0) return;
+      const count = selectedIds.size;
+      if (!confirm(`Re-appraise current market values for ${count} selected lighter(s)?`)) return;
+
+      const batchBtn = document.getElementById('batchAppraiseBtn');
+      const originalHtml = batchBtn.innerHTML;
+      batchBtn.disabled = true;
+
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const item = myVaultCollection.find(l => String(l.id) === String(id));
+        if (!item) continue;
+
+        batchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${i + 1}/${count}</span>`;
+
+        try {
+          const valData = await requestMarketValuation(item);
+          item.price = Number(valData.price) || item.price;
+          item.marketNotes = valData.marketNotes || item.marketNotes;
+          item.lastAppraisedAt = new Date().toISOString();
+
+          if (supabaseClient && currentUser) {
+            await supabaseClient.from('lighters').update({
+              price: item.price,
+              market_notes: item.marketNotes,
+              last_appraised_at: item.lastAppraisedAt
+            }).eq('id', item.id);
+          }
+          successCount++;
+        } catch (e) {
+          console.warn(`Failed re-appraisal on ${item.name}`, e);
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+
+      loadAppData();
+      batchBtn.innerHTML = originalHtml;
+      batchBtn.disabled = false;
+      alert(`Completed re-appraisal for ${successCount} of ${count} lighters.`);
+    }
+
+    async function uploadExtraPhoto(itemId, winId, input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const photoUrl = await uploadImageToSupabase(file, 'extra');
+      if (photoUrl) {
+        if (!item.extraImgs) item.extraImgs = [];
+        item.extraImgs.push(photoUrl);
+
+        if (supabaseClient && currentUser) {
+          await supabaseClient.from('lighters').update({ extra_imgs: item.extraImgs }).eq('id', item.id);
+        }
+        loadAppData();
+        const windowEl = document.getElementById(winId);
+        if (windowEl) renderWindowContent(windowEl, winId, item, false, false);
+      }
+    }
+
+    async function removeExtraPhoto(itemId, winId, photoIndex) {
+      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
+      if (!item || !item.extraImgs) return;
+
+      item.extraImgs.splice(photoIndex, 1);
+      if (supabaseClient && currentUser) {
+        await supabaseClient.from('lighters').update({ extra_imgs: item.extraImgs }).eq('id', item.id);
+      }
+      loadAppData();
+      const windowEl = document.getElementById(winId);
+      if (windowEl) renderWindowContent(windowEl, winId, item, false, false);
+    }
+
     function renderProfileView() {
       if (!userProfile) return;
       document.getElementById('profileUsernameDisplay').innerText = userProfile.username || 'Collector';
@@ -1196,6 +1567,23 @@
       renderLedgerList();
     }
 
+    function switchLedgerTab(tab) {
+      currentLedgerTab = tab;
+      const t1 = document.getElementById('ledgerTabListings');
+      const t2 = document.getElementById('ledgerTabSold');
+      const t3 = document.getElementById('ledgerTabBought');
+
+      t1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      t2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+      t3.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white";
+
+      if (tab === 'LISTINGS') t1.className = "flex-1 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+      if (tab === 'SOLD') t2.className = "flex-1 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      if (tab === 'BOUGHT') t3.className = "flex-1 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30";
+
+      renderLedgerList();
+    }
+
     function renderLedgerList() {
       const container = document.getElementById('ledgerListContainer');
       container.innerHTML = '';
@@ -1221,45 +1609,31 @@
       });
     }
 
-    async function toggleShowcasePin(itemId) {
-      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
-      if (!item) return;
-      item.inShowcase = !item.inShowcase;
-      await supabaseClient.from('lighters').update({ in_showcase: item.inShowcase }).eq('id', item.id);
+    async function uploadProfileMedia(input, type) {
+      const file = input.files[0];
+      if (!file || !currentUser) return;
+      const url = await uploadImageToSupabase(file, `profile_${type}`);
+      if (!url) return;
+      const updates = {};
+      if (type === 'banner') updates.banner_url = url;
+      if (type === 'avatar') updates.avatar_url = url;
+      await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
       loadAppData();
     }
 
-    async function toggleListingStatus(itemId, winId) {
-      const item = myVaultCollection.find(i => String(i.id) === String(itemId));
-      if (!item) return;
-      item.isListed = !item.isListed;
-      await supabaseClient.from('lighters').update({ is_listed: item.isListed, listing_price: item.price }).eq('id', item.id);
+    async function saveProfileSettings() {
+      if (!currentUser) return;
+      const updates = {
+        username: document.getElementById('editUsernameInput').value.trim() || userProfile.username,
+        location: document.getElementById('editLocationInput').value.trim(),
+        bio: document.getElementById('editBioInput').value.trim(),
+        vault_visibility: document.getElementById('editVaultVisibilityInput').value,
+        allow_vault_offers: document.getElementById('editAllowOffersInput').checked,
+        updated_at: new Date().toISOString()
+      };
+      await supabaseClient.from('profiles').update(updates).eq('id', currentUser.id);
+      toggleProfileEditModal();
       loadAppData();
-    }
-
-    function openMarketInquiryById(id) {
-      const item = publicMarketCollection.find(i => String(i.id) === String(id));
-      if (item) {
-        currentInquiryItem = item;
-        document.getElementById('inquiryItemSummary').innerHTML = `
-          <img src="${item.frontImg || ''}" class="w-12 h-12 rounded object-cover border border-white/10 bg-black/40">
-          <div>
-            <h4 class="text-xs font-bold text-gray-100 truncate">${item.name}</h4>
-            <p class="text-xs font-extrabold text-emerald-400 mt-0.5">Asking: $${Number(item.listingPrice).toFixed(2)}</p>
-          </div>
-        `;
-        document.getElementById('inquiryMessageInput').value = `Hi! I saw your ${item.name} on FlameVault for $${item.listingPrice}. Is this still available?`;
-        document.getElementById('inquiryModal').classList.remove('hidden');
-      }
-    }
-    function closeInquiryModal() { document.getElementById('inquiryModal').classList.add('hidden'); }
-    function sendInquiryToSeller() {
-      if (!currentInquiryItem) return;
-      const message = document.getElementById('inquiryMessageInput').value;
-      const subject = encodeURIComponent(`FlameVault Inquiry: ${currentInquiryItem.name}`);
-      const body = encodeURIComponent(message);
-      window.location.href = `mailto:?subject=${subject}&body=${body}`;
-      closeInquiryModal();
     }
 
     function closeInspectionWindow(winId) {
@@ -1377,14 +1751,28 @@
 
       const runBtn = document.getElementById('runAiBtn'); runBtn.disabled = true;
       try {
-        const parts = [{ text: `Analyze lighter images. Return raw JSON: {"name":"str","modelNumber":"str","editionNumber":"str","year":"str","tier":"COTY|ARMOR|VINTAGE|STANDARD","stampDetails":"str","finish":"str","artwork":"str","condition":"Loose / Fired|Mint in Box","price":number,"marketNotes":"str"}` }];
+        const parts = [{ text: `You are a certified Zippo lighter appraiser.
+Analyze the provided images. Return raw JSON:
+{
+  "name": "Full Official Model Name",
+  "modelNumber": "5-digit catalog number or empty string",
+  "editionNumber": "Limited edition numbering if visible (e.g. 05761/20020), otherwise empty string",
+  "year": "Exact year (e.g. 2023)",
+  "tier": "COTY or ARMOR or VINTAGE or STANDARD",
+  "stampDetails": "Full explanation of stamp",
+  "finish": "Case finish and metal",
+  "artwork": "Artwork details",
+  "condition": "Loose / Fired or Mint in Box",
+  "price": number,
+  "marketNotes": "Summary of eBay comp pricing"
+}` }];
         if (frontFile) {
           const b64 = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result.split(',')[1]); rd.readAsDataURL(frontFile); });
-          parts.push({ text: "FRONT:" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
+          parts.push({ text: "PHOTO 1 (Front):" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
         }
         if (stampFile) {
           const b64 = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result.split(',')[1]); rd.readAsDataURL(stampFile); });
-          parts.push({ text: "STAMP:" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
+          parts.push({ text: "PHOTO 2 (Stamp):" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
         }
 
         let parsed = null;
@@ -1409,6 +1797,9 @@
         document.getElementById('formEditionNum').value = parsed.editionNumber || "";
         document.getElementById('formTier').value = parsed.tier || "STANDARD";
         document.getElementById('formStampDetails').value = parsed.stampDetails || "";
+        document.getElementById('formFinish').value = parsed.finish || "";
+        document.getElementById('formArtwork').value = parsed.artwork || "";
+        document.getElementById('formMarketNotes').value = parsed.marketNotes || "";
         document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
         document.getElementById('formPrice').value = parsed.price || 35.00;
       } catch (err) { alert(`Scan error: ${err.message}`); }
@@ -1424,6 +1815,9 @@
         const editionNumber = document.getElementById('formEditionNum').value.trim();
         const tier = document.getElementById('formTier').value;
         const stampDetails = document.getElementById('formStampDetails').value.trim();
+        const finish = document.getElementById('formFinish').value.trim();
+        const artwork = document.getElementById('formArtwork').value.trim();
+        const marketNotes = document.getElementById('formMarketNotes').value.trim();
         const condition = document.getElementById('formCondition').value;
         const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
         const frontFile = document.getElementById('frontPhotoInput').files[0];
@@ -1438,9 +1832,9 @@
 
           const payload = {
             user_id: currentUser.id, name, model_number: modelNumber, edition_number: editionNumber,
-            year: "Modern", tier, stamp_details: stampDetails, condition, price, is_listed: false, in_showcase: false,
-            status: 'VAULT', listing_price: price, front_img: frontImgUrl, stamp_img: stampImgUrl, extra_imgs: [],
-            last_appraised_at: new Date().toISOString()
+            year: "Modern", tier, stamp_details: stampDetails, finish, artwork, market_notes: marketNotes,
+            condition, price, is_listed: false, in_showcase: false, status: 'VAULT', listing_price: price,
+            front_img: frontImgUrl, stamp_img: stampImgUrl, extra_imgs: [], last_appraised_at: new Date().toISOString()
           };
           await supabaseClient.from('lighters').insert([payload]);
           loadAppData();
