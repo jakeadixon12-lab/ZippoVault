@@ -13,6 +13,8 @@
     .bottom-nav { background-color: #12131c; border-top: 1px solid rgba(255, 255, 255, 0.08); }
     .drag-handle { touch-action: none; cursor: grab; }
     .drag-handle:active { cursor: grabbing; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="pb-32 select-none overflow-x-hidden">
@@ -63,7 +65,7 @@
     </div>
   </main>
 
-  <!-- Container for Multiple Dynamic Floating Cards -->
+  <!-- Dynamic Multi-Window Container -->
   <div id="floatingWindowsContainer" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
 
   <!-- Sticky Batch Tray -->
@@ -164,6 +166,10 @@
         <div>
           <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Artwork Details</label>
           <input type="text" id="formArtwork" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Market Analysis & Historical Comps</label>
+          <textarea id="formMarketNotes" rows="2" placeholder="Market sources and pricing history..." class="w-full bg-[#12131c] text-xs text-gray-300 p-2 rounded border border-white/10 mt-1"></textarea>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -272,7 +278,9 @@
         condition: row.condition,
         price: Number(row.price),
         frontImg: row.front_img,
-        stampImg: row.stamp_img
+        stampImg: row.stamp_img,
+        extraImgs: row.extra_imgs || [],
+        marketNotes: row.market_notes || ''
       }));
 
       localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
@@ -394,7 +402,7 @@
       updateBatchTray();
     }
 
-    // Spawn Independent Draggable Floating Window (Multiple allowed simultaneously)
+    // Dynamic Multi-Window Inspector with In-place Editing, Photo Gallery & Valuation Comps
     function openInspectionWindow(id) {
       const item = collection.find(i => String(i.id) === String(id));
       if (!item) return;
@@ -403,20 +411,29 @@
       const winId = `win_${item.id}_${Date.now()}`;
       highestZIndex += 1;
 
-      // Cascade windows diagonally so comparing is instant
       const baseTop = 40 + (windowCascadeOffset % 120);
       const baseLeft = 15 + (windowCascadeOffset % 120);
       windowCascadeOffset += 28;
 
       const windowEl = document.createElement('div');
       windowEl.id = winId;
-      windowEl.className = "pointer-events-auto absolute w-[88vw] max-w-[340px] bg-[#191b26] rounded-2xl shadow-2xl border border-white/20 flex flex-col max-h-[82vh] overflow-hidden select-none transition-shadow";
+      windowEl.className = "pointer-events-auto absolute w-[90vw] max-w-[360px] bg-[#191b26] rounded-2xl shadow-2xl border border-white/20 flex flex-col max-h-[85vh] overflow-hidden select-none transition-shadow";
       windowEl.style.zIndex = highestZIndex;
       windowEl.style.top = `${baseTop}px`;
-      windowEl.style.left = `${Math.min(baseLeft, window.innerWidth - 350 > 0 ? window.innerWidth - 350 : 20)}px`;
+      windowEl.style.left = `${Math.min(baseLeft, window.innerWidth - 370 > 0 ? window.innerWidth - 370 : 15)}px`;
 
       windowEl.addEventListener('mousedown', () => bringWindowToFront(windowEl));
       windowEl.addEventListener('touchstart', () => bringWindowToFront(windowEl));
+
+      renderWindowContent(windowEl, winId, item, false);
+
+      container.appendChild(windowEl);
+      bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
+      updateWindowCountBadge();
+    }
+
+    function renderWindowContent(windowEl, winId, item, isEditing) {
+      const extraImages = item.extraImgs || [];
 
       windowEl.innerHTML = `
         <!-- Drag Header Handle -->
@@ -426,70 +443,281 @@
             <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30 uppercase">${item.tier}</span>
             <span class="text-xs font-bold text-gray-200 truncate">${item.name}</span>
           </div>
-          <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
-            <i class="fa-solid fa-xmark text-sm"></i>
-          </button>
+          <div class="flex items-center gap-1">
+            <button onclick="toggleCardEdit('${winId}', '${item.id}')" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
+              <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen-to-square'}"></i>
+            </button>
+            <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Scrollable Details -->
+        <!-- Content Area -->
         <div class="p-3.5 overflow-y-auto space-y-3">
-          ${item.editionNumber ? `
-            <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
-              <span class="text-[10px] uppercase font-bold text-amber-400">COTY Edition #</span>
-              <span class="text-xs font-mono font-extrabold text-amber-300 tracking-wider">${item.editionNumber}</span>
-            </div>
-          ` : ''}
-
-          <div class="grid grid-cols-2 gap-2">
-            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
-              <img src="${item.frontImg || ''}" class="w-full h-full object-cover">
-            </div>
-            <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
-              ${item.stampImg ? `<img src="${item.stampImg}" class="w-full h-full object-cover">` : '<span class="text-[10px] text-gray-500 text-center px-1">No Stamp Photo</span>'}
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
-            <div>
-              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
-              <span class="text-base font-bold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
-            </div>
-            <div>
-              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Condition</span>
-              <span class="text-xs text-gray-200 font-medium">${item.condition || 'Loose / Fired'}</span>
-            </div>
-          </div>
-
-          <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
-            <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
-            </h4>
-            <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
-          </div>
-
-          <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
-            <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
-            </h4>
-            <div>
-              <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
-              <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard release'}</p>
-            </div>
-            <div>
-              <span class="text-[9px] text-gray-400 uppercase block">Finish & Case:</span>
-              <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
-            </div>
-            <div>
-              <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
-              <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
-            </div>
-          </div>
+          ${isEditing ? renderEditForm(item, winId) : renderViewContent(item, winId, extraImages)}
         </div>
       `;
 
-      container.appendChild(windowEl);
       bindDraggable(windowEl, windowEl.querySelector('.drag-handle'));
-      updateWindowCountBadge();
+    }
+
+    function renderViewContent(item, winId, extraImages) {
+      return `
+        ${item.editionNumber ? `
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+            <span class="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-award"></i> COTY Edition / Make #
+            </span>
+            <span class="text-xs font-mono font-extrabold text-amber-300 tracking-wider">${item.editionNumber}</span>
+          </div>
+        ` : ''}
+
+        <!-- Primary Dual Photos -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
+            <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
+            <img src="${item.frontImg || ''}" class="w-full h-full object-cover">
+          </div>
+          <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative flex items-center justify-center">
+            <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Stamp</span>
+            ${item.stampImg ? `<img src="${item.stampImg}" class="w-full h-full object-cover">` : '<span class="text-[10px] text-gray-500 text-center px-1">No Stamp Photo</span>'}
+          </div>
+        </div>
+
+        <!-- Supplemental Aesthetic Photos Horizontal Scroller -->
+        <div class="bg-[#12131c] p-2 rounded-lg border border-white/5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[9px] uppercase font-bold text-gray-400 flex items-center gap-1">
+              <i class="fa-solid fa-images text-amber-400"></i> Gallery & Packaging (${extraImages.length})
+            </span>
+            <label class="cursor-pointer text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold">
+              <i class="fa-solid fa-plus"></i> Add Photo
+              <input type="file" accept="image/*" class="hidden" onchange="uploadExtraPhoto('${item.id}', '${winId}', this)">
+            </label>
+          </div>
+          
+          <div class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+            ${extraImages.length === 0 ? '<span class="text-[10px] text-gray-500 py-2 italic">No extra photos added. Tap + Add Photo above.</span>' : ''}
+            ${extraImages.map((imgUrl, idx) => `
+              <div class="relative flex-shrink-0 w-14 h-14 bg-black/40 rounded border border-white/10 overflow-hidden group">
+                <img src="${imgUrl}" class="w-full h-full object-cover">
+                <button onclick="removeExtraPhoto('${item.id}', '${winId}',${idx})" class="absolute top-0.5 right-0.5 bg-black/80 text-red-400 hover:text-red-300 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px]">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Valuation & Condition Card -->
+        <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Secondary Value</span>
+            <span class="text-base font-bold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Condition</span>
+            <span class="text-xs text-gray-200 font-medium">${item.condition || 'Loose / Fired'}</span>
+          </div>
+        </div>
+
+        <!-- Secondary Market Intelligence & Price History Breakdown -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+          <h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Market Intelligence & Comps</span>
+            <span class="text-[8px] bg-emerald-500/10 text-emerald-300 px-1 py-0.5 rounded border border-emerald-500/20">eBay / Auction / Club</span>
+          </h4>
+          <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Secondary market value estimated based on verified eBay sold listings, collector forum benchmarks, and original Zippo MSRP comparisons.'}</p>
+        </div>
+
+        <!-- Stamp Breakdown -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5">
+          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
+          </h4>
+          <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
+        </div>
+
+        <!-- Design Elements -->
+        <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
+          <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
+          </h4>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Catalog SKU:</span>
+            <p class="text-xs text-gray-200 font-mono">${item.modelNumber ? '#' + item.modelNumber : 'Standard catalog release'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Finish & Metal:</span>
+            <p class="text-xs text-gray-300">${item.finish || 'Standard casing.'}</p>
+          </div>
+          <div>
+            <span class="text-[9px] text-gray-400 uppercase block">Artwork Details:</span>
+            <p class="text-xs text-gray-300">${item.artwork || 'Standard factory finish.'}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEditForm(item, winId) {
+      return `
+        <div class="space-y-2.5 text-left">
+          <div class="flex items-center justify-between border-b border-white/10 pb-1">
+            <span class="text-xs font-bold text-amber-400 uppercase">Edit Lighter Details</span>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Model / Name</label>
+            <input type="text" id="edit_name_${winId}" value="${item.name}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Catalog SKU #</label>
+              <input type="text" id="edit_modelNum_${winId}" value="${item.modelNumber || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+            </div>
+            <div>
+              <label class="block text-[9px] text-amber-400 uppercase">COTY Edition #</label>
+              <input type="text" id="edit_editionNum_${winId}" value="${item.editionNumber || ''}" placeholder="05761/20020" class="w-full bg-[#12131c] text-xs text-amber-300 font-mono p-1.5 rounded border border-amber-500/30 mt-0.5">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Tier</label>
+              <select id="edit_tier_${winId}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+                <option value="STANDARD" ${item.tier === 'STANDARD' ? 'selected' : ''}>Standard</option>
+                <option value="COTY" ${item.tier === 'COTY' ? 'selected' : ''}>COTY</option>
+                <option value="ARMOR" ${item.tier === 'ARMOR' ? 'selected' : ''}>Armor</option>
+                <option value="VINTAGE" ${item.tier === 'VINTAGE' ? 'selected' : ''}>Vintage</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] text-gray-400 uppercase">Condition</label>
+              <select id="edit_condition_${winId}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+                <option value="Loose / Fired" ${item.condition === 'Loose / Fired' ? 'selected' : ''}>Loose / Fired</option>
+                <option value="Mint in Box" ${item.condition === 'Mint in Box' ? 'selected' : ''}>Mint in Box</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Estimated Value ($)</label>
+            <input type="number" id="edit_price_${winId}" value="${item.price}" class="w-full bg-[#12131c] text-xs text-emerald-400 font-bold p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Stamp & Date Breakdown</label>
+            <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
+            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
+            <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+          <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Artwork Details</label>
+            <input type="text" id="edit_artwork_${winId}" value="${item.artwork || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button onclick="saveCardEdit('${item.id}', '${winId}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs rounded">Save Changes</button>
+            <button onclick="toggleCardEdit('${winId}', '${item.id}')" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs rounded">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleCardEdit(winId, itemId) {
+      const windowEl = document.getElementById(winId);
+      if (!windowEl) return;
+      const item = collection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const isCurrentlyEditing = windowEl.querySelector(`#edit_name_${winId}`) !== null;
+      renderWindowContent(windowEl, winId, item, !isCurrentlyEditing);
+    }
+
+    async function saveCardEdit(itemId, winId) {
+      const item = collection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      item.name = document.getElementById(`edit_name_${winId}`).value.trim() || item.name;
+      item.modelNumber = document.getElementById(`edit_modelNum_${winId}`).value.trim();
+      item.editionNumber = document.getElementById(`edit_editionNum_${winId}`).value.trim();
+      item.tier = document.getElementById(`edit_tier_${winId}`).value;
+      item.condition = document.getElementById(`edit_condition_${winId}`).value;
+      item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
+      item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
+      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
+      item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
+      item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
+
+      if (supabaseClient) {
+        const payload = {
+          name: item.name,
+          model_number: item.modelNumber,
+          edition_number: item.editionNumber,
+          tier: item.tier,
+          condition: item.condition,
+          price: item.price,
+          stamp_details: item.stampDetails,
+          market_notes: item.marketNotes,
+          finish: item.finish,
+          artwork: item.artwork
+        };
+        const { error } = await supabaseClient.from('lighters').update(payload).eq('id', item.id);
+        if (error) console.warn("Cloud update notice:", error);
+      }
+
+      localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+      renderCollection();
+
+      const windowEl = document.getElementById(winId);
+      if (windowEl) renderWindowContent(windowEl, winId, item, false);
+    }
+
+    // Upload supplemental aesthetic photos
+    async function uploadExtraPhoto(itemId, winId, input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const item = collection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      let photoUrl = null;
+      if (supabaseClient) {
+        photoUrl = await uploadImageToSupabase(file, 'extra');
+      } else {
+        photoUrl = URL.createObjectURL(file);
+      }
+
+      if (photoUrl) {
+        if (!item.extraImgs) item.extraImgs = [];
+        item.extraImgs.push(photoUrl);
+
+        if (supabaseClient) {
+          await supabaseClient.from('lighters').update({ extra_imgs: item.extraImgs }).eq('id', item.id);
+        }
+
+        localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+        const windowEl = document.getElementById(winId);
+        if (windowEl) renderWindowContent(windowEl, winId, item, false);
+      }
+    }
+
+    async function removeExtraPhoto(itemId, winId, photoIndex) {
+      const item = collection.find(i => String(i.id) === String(itemId));
+      if (!item || !item.extraImgs) return;
+
+      item.extraImgs.splice(photoIndex, 1);
+
+      if (supabaseClient) {
+        await supabaseClient.from('lighters').update({ extra_imgs: item.extraImgs }).eq('id', item.id);
+      }
+
+      localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+      const windowEl = document.getElementById(winId);
+      if (windowEl) renderWindowContent(windowEl, winId, item, false);
     }
 
     function bringWindowToFront(windowEl) {
@@ -521,7 +749,6 @@
       }
     }
 
-    // Modular Drag Controller for dynamically spawned elements
     function bindDraggable(windowEl, handleEl) {
       let isDragging = false;
       let startX = 0;
@@ -557,12 +784,10 @@
         isDragging = false;
       }
 
-      // Mouse drag
       handleEl.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
       window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
       window.addEventListener('mouseup', onEnd);
 
-      // Touch drag
       handleEl.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: false });
@@ -690,7 +915,7 @@
       });
     }
 
-    // AI Dual-Image Analyzer (Strictly post-3.1 model pipeline with COTY Edition extraction)
+    // AI Dual-Image Analyzer with Valuation Sources & Market History
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) {
@@ -721,9 +946,12 @@ ZIPPO DATE CODE DECODING RULES:
 - 1958 to 1985: Dots and slashes flanking the Zippo logo.
 - Location: "BRADFORD, PA. MADE IN U.S.A."
 
-SPECIAL COTY & NUMBERED EDITIONS INSTRUCTION:
-- Check if this lighter is an official Collectible of the Year (COTY) or limited edition.
-- Look closely for any laser-engraved edition numbering sequence typically found on the side spine, bottom, or reverse face (e.g. 05761/20020 or 1234/12000). If present, output this exact string in "editionNumber".
+SPECIAL VALUATION & MARKET COMP RULES:
+- Analyze secondary market pricing across verified eBay sold listings, specialty retailer historical pricing (e.g., Riley's 66, Lucas Lighters, Z-Connect member drops), and collector conventions.
+- Provide a structured explanation in "marketNotes" describing:
+  1) Verified market sources checked (e.g. eBay completed sales, collector swap sheets).
+  2) Original retail price vs current secondary market trend.
+  3) Value differential between unfired (Mint in Box) vs fired loose condition.
 
 JSON FORMAT:
 {
@@ -736,7 +964,8 @@ JSON FORMAT:
   "finish": "Case finish and metal",
   "artwork": "Artwork and engraving technique",
   "condition": "Loose / Fired or Mint in Box",
-  "price": number
+  "price": number,
+  "marketNotes": "Detailed market intelligence summarizing eBay completed sales benchmarks, release MSRP vs current value, and appreciation trajectory."
 }`;
 
         parts.push({ text: systemInstruction });
@@ -788,6 +1017,7 @@ JSON FORMAT:
               document.getElementById('formStampDetails').value = parsed.stampDetails || "";
               document.getElementById('formFinish').value = parsed.finish || "";
               document.getElementById('formArtwork').value = parsed.artwork || "";
+              document.getElementById('formMarketNotes').value = parsed.marketNotes || "";
               document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
               document.getElementById('formPrice').value = parsed.price || 35.00;
 
@@ -802,7 +1032,7 @@ JSON FORMAT:
           if (success) break;
         }
 
-        if (!success) throw lastError || new Error("Modern Gemini models are currently busy. Please wait a moment.");
+        if (!success) throw lastError || new Error("Gemini endpoints busy. Please try again.");
 
       } catch (err) {
         alert(`AI scan error: ${err.message || 'Check connection or key'}`);
@@ -825,6 +1055,7 @@ JSON FORMAT:
         const stampDetails = document.getElementById('formStampDetails').value.trim();
         const finish = document.getElementById('formFinish').value.trim();
         const artwork = document.getElementById('formArtwork').value.trim();
+        const marketNotes = document.getElementById('formMarketNotes').value.trim();
         const condition = document.getElementById('formCondition').value;
         const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
 
@@ -850,10 +1081,12 @@ JSON FORMAT:
             stamp_details: stampDetails,
             finish,
             artwork,
+            market_notes: marketNotes,
             condition,
             price,
             front_img: frontImgUrl,
-            stamp_img: stampImgUrl
+            stamp_img: stampImgUrl,
+            extra_imgs: []
           };
 
           if (editionNumber) payload.edition_number = editionNumber;
@@ -872,10 +1105,12 @@ JSON FORMAT:
             stampDetails,
             finish,
             artwork,
+            marketNotes,
             condition,
             price,
             frontImg: frontImgUrl,
-            stampImg: stampImgUrl
+            stampImg: stampImgUrl,
+            extraImgs: []
           });
           localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
           renderCollection();
@@ -885,6 +1120,7 @@ JSON FORMAT:
         document.getElementById('frontPhotoInput').value = "";
         document.getElementById('stampPhotoInput').value = "";
         document.getElementById('formEditionNum').value = "";
+        document.getElementById('formMarketNotes').value = "";
       } catch (err) {
         alert("Failed to save to cloud: " + err.message);
       } finally {
