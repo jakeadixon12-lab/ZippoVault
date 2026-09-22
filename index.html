@@ -66,7 +66,6 @@
 
   <!-- Main Viewports -->
   <main class="p-3">
-    <!-- Grid View for Vault and Marketplace -->
     <div id="itemsGrid" class="grid grid-cols-3 gap-2.5"></div>
     
     <div id="emptyState" class="hidden text-center py-16 text-gray-500">
@@ -113,7 +112,6 @@
             <p id="profileBioDisplay" class="text-xs text-gray-400 mt-0.5">Zippo enthusiast & historic piece curator.</p>
             <div class="flex items-center gap-4 text-[11px] text-gray-400 mt-2">
               <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-amber-500"></i> <span id="profileLocationDisplay">Columbus, OH</span></span>
-              <!-- Clickable Friends List Trigger -->
               <button onclick="openFriendsModal()" class="flex items-center gap-1 hover:text-blue-400 transition cursor-pointer">
                 <i class="fa-solid fa-user-group text-blue-400"></i> <strong id="profileFriendsCount" class="text-white">0</strong> Friends
               </button>
@@ -151,7 +149,7 @@
       </div>
     </section>
 
-    <!-- NEW: Collecting Tab Viewport (Intro to Collecting & Watchlist) -->
+    <!-- Collecting Tab Viewport -->
     <section id="collectingViewport" class="hidden space-y-4 pb-12">
       <!-- Section Tabs -->
       <div class="flex bg-[#12131c] p-1 rounded-xl border border-white/10 text-xs font-bold">
@@ -223,26 +221,54 @@
         </div>
       </div>
 
-      <!-- Sub-Tab 2: Watchlist & Grail Radar -->
+      <!-- Sub-Tab 2: Master Catalog & AI-Verified Watchlist -->
       <div id="collectingWatchlistSection" class="hidden space-y-3">
-        <div class="card-surface p-3 rounded-2xl border border-white/10 space-y-2">
+        <!-- Verified Catalog Search & AI Verification Gate -->
+        <div class="card-surface p-3.5 rounded-2xl border border-white/10 space-y-3 relative">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-binoculars text-amber-400"></i> Pin a Grail to Your Watchlist
+              <i class="fa-solid fa-database text-amber-400"></i> Master Catalog Search & AI Gate
+            </span>
+            <span class="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              <i class="fa-solid fa-shield-check"></i> Auto-Verified
             </span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input type="text" id="watchlistTitleInput" placeholder="Lighter name (e.g. 1994 D-Day Round Tin)" class="w-full bg-[#12131c] text-xs p-2 rounded-lg border border-white/10 text-white">
-            <input type="text" id="watchlistSkuInput" placeholder="SKU / Keyword (e.g. 19941)" class="w-full bg-[#12131c] text-xs p-2 rounded-lg border border-white/10 text-white font-mono">
-            <button onclick="addToWatchlist()" class="py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg shadow">
-              <i class="fa-solid fa-plus mr-1"></i> Track Grail
-            </button>
+
+          <div class="relative">
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"></i>
+                <input id="refSearchInput" oninput="handleCatalogInput(this.value)" type="text" placeholder="Search master catalog by name, era, or SKU..."
+                       class="w-full bg-[#12131c] text-xs pl-8 pr-3 py-2 rounded-lg border border-white/10 text-white focus:outline-none focus:border-amber-500">
+              </div>
+              <button id="aiVerifyBtn" onclick="verifyCustomPieceWithAI()" class="py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-bold text-xs rounded-lg shadow flex items-center gap-1.5 flex-shrink-0">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Verify & Track</span>
+              </button>
+            </div>
+
+            <!-- Live Typeahead Suggestions Dropdown -->
+            <div id="refSuggestionsDropdown" class="hidden absolute top-11 inset-x-0 bg-[#161822] rounded-xl border border-white/15 shadow-2xl z-50 max-h-56 overflow-y-auto space-y-1 p-1"></div>
           </div>
+          <p class="text-[10px] text-gray-400 italic">Select from our verified catalog, or enter an obscure vintage/military piece and our AI appraiser will validate authenticity before tracking.</p>
+        </div>
+
+        <!-- Curated Master Grail Shelf (One-Click Track) -->
+        <div class="card-surface p-3.5 rounded-2xl border border-white/10 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-trophy text-amber-400"></i> Milestone Grails (Quick Track)
+            </span>
+            <span class="text-[10px] text-gray-400">Tap + to add to radar</span>
+          </div>
+          <div id="masterGrailShelf" class="flex gap-2.5 overflow-x-auto pb-1 hide-scrollbar"></div>
         </div>
 
         <!-- Watchlist Items & Radar Matches -->
         <div class="space-y-2">
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Tracked Grails & Community Radar</h3>
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Your Tracked Grails & Community Radar</h3>
+            <span id="watchlistCountBadge" class="text-[10px] text-emerald-400 font-mono">0 Tracked</span>
+          </div>
           <div id="watchlistContainer" class="space-y-2"></div>
         </div>
       </div>
@@ -310,7 +336,6 @@
         </h3>
         <button onclick="closeFriendsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-
       <div id="friendsListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
     </div>
   </div>
@@ -393,7 +418,6 @@
         </h3>
         <button onclick="toggleProfileEditModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <div class="space-y-2.5 text-xs">
         <div>
           <label class="block text-[10px] text-gray-400 uppercase">Collector Handle</label>
@@ -604,6 +628,7 @@
     let publicMarketCollection = [];
     let allPublicProfiles = [];
     let allCommunityLighters = [];
+    let referenceCatalog = [];
     let userWatchlist = [];
     let friendsList = [];
     let vouchesList = [];
@@ -724,6 +749,13 @@
     async function loadAppData() {
       if (!supabaseClient) return;
 
+      // 1. Fetch Master Reference Catalog
+      const { data: refData } = await supabaseClient.from('reference_lighters').select('*').order('created_at', { ascending: false });
+      if (refData) {
+        referenceCatalog = refData;
+        renderMasterGrailShelf();
+      }
+
       if (currentUser) {
         const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
         if (profile) userProfile = profile;
@@ -797,7 +829,7 @@
       }));
     }
 
-    // View Switching: Vault, Collecting, Market, Profile
+    // View Switching
     function switchMainView(mode) {
       viewMode = mode;
       const navVaultBtn = document.getElementById('navVaultBtn');
@@ -812,7 +844,6 @@
       const collectingViewport = document.getElementById('collectingViewport');
       const batchTray = document.getElementById('batchTray');
 
-      // Reset
       navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
       navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
       navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
@@ -857,7 +888,6 @@
       }
     }
 
-    // Collecting Sub-Tabs
     function switchCollectingSubTab(tab) {
       currentCollectingTab = tab;
       const b1 = document.getElementById('collectingTabGuideBtn');
@@ -879,38 +909,208 @@
       }
     }
 
-    async function addToWatchlist() {
-      if (!currentUser) return toggleAuthModal();
-      const title = document.getElementById('watchlistTitleInput').value.trim();
-      const sku = document.getElementById('watchlistSkuInput').value.trim();
-      if (!title) return alert("Please enter a lighter name or model.");
+    // Master Reference Catalog & Typeahead Logic
+    function renderMasterGrailShelf() {
+      const shelf = document.getElementById('masterGrailShelf');
+      if (!shelf) return;
+      shelf.innerHTML = '';
 
-      const { error } = await supabaseClient.from('user_watchlists').insert([{ user_id: currentUser.id, lighter_title: title, model_sku: sku }]);
-      if (error) alert("Error adding: " + error.message);
+      referenceCatalog.slice(0, 10).forEach(ref => {
+        const isTracked = userWatchlist.some(w => w.lighter_title === ref.title || (w.model_sku && w.model_sku === ref.sku));
+        const itemEl = document.createElement('div');
+        itemEl.className = "flex-shrink-0 w-28 bg-[#12131c] rounded-xl p-2 border border-white/10 flex flex-col justify-between hover:border-amber-500/40 transition";
+        itemEl.innerHTML = `
+          <div>
+            <div class="relative w-full aspect-square rounded-lg bg-black/40 overflow-hidden mb-1.5">
+              <img src="${ref.img_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300'}" class="w-full h-full object-cover">
+              <span class="absolute top-1 left-1 bg-black/80 text-amber-400 text-[8px] font-bold px-1 rounded">${ref.year}</span>
+            </div>
+            <h4 class="text-[10px] font-bold text-gray-100 truncate">${ref.title}</h4>
+            <span class="text-[9px] text-emerald-400 font-mono block">${ref.est_market || 'Rare'}</span>
+          </div>
+          <button onclick="trackReferenceItem('${ref.id}')" class="w-full py-1 mt-1.5 text-[9px] font-bold rounded flex items-center justify-center gap-1 transition ${isTracked ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500 hover:bg-amber-600 text-black'}">
+            ${isTracked ? '<i class="fa-solid fa-check"></i> Tracked' : '<i class="fa-solid fa-plus"></i> Track'}
+          </button>
+        `;
+        shelf.appendChild(itemEl);
+      });
+    }
+
+    function handleCatalogInput(query) {
+      const dropdown = document.getElementById('refSuggestionsDropdown');
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        dropdown.classList.add('hidden');
+        return;
+      }
+
+      const matches = referenceCatalog.filter(ref => 
+        ref.title.toLowerCase().includes(q) || 
+        (ref.sku && ref.sku.toLowerCase().includes(q)) ||
+        (ref.year && ref.year.toLowerCase().includes(q))
+      );
+
+      dropdown.innerHTML = '';
+      if (matches.length === 0) {
+        dropdown.innerHTML = `<div class="p-2 text-xs text-gray-400 italic">No exact catalog match. Tap "Verify & Track" to validate via AI.</div>`;
+      } else {
+        matches.slice(0, 6).forEach(m => {
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between p-2 rounded-lg hover:bg-white/5 cursor-pointer text-xs";
+          row.onclick = () => {
+            document.getElementById('refSearchInput').value = m.title;
+            dropdown.classList.add('hidden');
+            trackReferenceItem(m.id);
+          };
+          row.innerHTML = `
+            <div class="flex items-center gap-2 truncate">
+              <span class="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded">${m.year || 'Era'}</span>
+              <span class="text-gray-200 font-semibold truncate">${m.title}</span>
+              ${m.sku ? `<span class="text-[9px] text-gray-400 font-mono">#${m.sku}</span>` : ''}
+            </div>
+            <span class="text-[10px] text-emerald-400 font-bold ml-2">${m.est_market}</span>
+          `;
+          dropdown.appendChild(row);
+        });
+      }
+      dropdown.classList.remove('hidden');
+    }
+
+    async function trackReferenceItem(refId) {
+      if (!currentUser) return toggleAuthModal();
+      const ref = referenceCatalog.find(r => String(r.id) === String(refId));
+      if (!ref) return;
+
+      const already = userWatchlist.some(w => w.lighter_title === ref.title);
+      if (already) return alert(`"${ref.title}" is already on your watchlist.`);
+
+      const { error } = await supabaseClient.from('user_watchlists').insert([{
+        user_id: currentUser.id,
+        reference_id: ref.id,
+        lighter_title: ref.title,
+        model_sku: ref.sku || '',
+        notes: ref.description || ''
+      }]);
+
+      if (error) alert("Tracking error: " + error.message);
       else {
-        document.getElementById('watchlistTitleInput').value = '';
-        document.getElementById('watchlistSkuInput').value = '';
         loadAppData();
+        document.getElementById('refSuggestionsDropdown').classList.add('hidden');
       }
     }
 
-    async function removeWatchlistItem(id) {
-      await supabaseClient.from('user_watchlists').delete().eq('id', id);
-      loadAppData();
+    // AI Verification Gate for Custom / Vintage Searches
+    async function verifyCustomPieceWithAI() {
+      if (!currentUser) return toggleAuthModal();
+      const inputEl = document.getElementById('refSearchInput');
+      const userText = inputEl.value.trim();
+      if (!userText) return alert("Please type a lighter name, model, or vintage military theme.");
+
+      // Check if exact match already exists in reference catalog
+      const localMatch = referenceCatalog.find(r => r.title.toLowerCase() === userText.toLowerCase() || (r.sku && r.sku.toLowerCase() === userText.toLowerCase()));
+      if (localMatch) {
+        return trackReferenceItem(localMatch.id);
+      }
+
+      const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
+      if (!apiKey) return alert("Configure your Gemini API key in Config first.");
+
+      const btn = document.getElementById('aiVerifyBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying...</span>`;
+
+      const prompt = `You are the lead historical archivist for Zippo windproof lighters.
+Analyze this user query: "${userText}".
+Determine if this query represents a real, authentic, historically produced, or plausible Zippo lighter, military unit run, anniversary, or official catalog SKU.
+If the query is gibberish, keyboard mash (like 'efyueh'), completely fake, or unrelated to lighters, set "isValid": false.
+If it is a valid or plausible authentic lighter, set "isValid": true and normalize its title, era, catalog SKU, and estimated secondary market price range.
+
+Respond strictly in raw JSON with no formatting or backticks:
+{
+  "isValid": boolean,
+  "normalizedTitle": "Clean official lighter title",
+  "sku": "5-digit SKU if known or plausible, otherwise empty string",
+  "year": "Exact year or Era (e.g. 1968 or Vietnam Era)",
+  "tier": "COTY or ARMOR or VINTAGE or STANDARD",
+  "description": "Historical context and identifying characteristics",
+  "estMarket": "$X - $Y market comp range",
+  "rejectionReason": "If invalid, explain why this is not a recognized Zippo piece"
+}`;
+
+      try {
+        let parsed = null;
+        for (const model of ACTIVE_GEMINI_MODELS) {
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { response_mime_type: "application/json", thinking_config: { thinking_budget: 0 } }
+              })
+            });
+            const d = await res.json();
+            if (d.error) throw new Error(d.error.message);
+            parsed = JSON.parse(d.candidates[0].content.parts[0].text);
+            break;
+          } catch (e) {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+
+        if (!parsed) throw new Error("Could not reach verification service.");
+
+        if (!parsed.isValid) {
+          alert(`Verification Failed:\n"${userText}" is not a recognized Zippo lighter model or theme.\n\nReason: ${parsed.rejectionReason || 'Unrecognized term. Check spelling or try a catalog SKU.'}`);
+          return;
+        }
+
+        // Validated by AI - Insert into Reference Table & Add to Watchlist
+        const { data: newRef, error: refErr } = await supabaseClient.from('reference_lighters').insert([{
+          title: parsed.normalizedTitle,
+          sku: parsed.sku || '',
+          year: parsed.year || 'Vintage',
+          tier: parsed.tier || 'STANDARD',
+          description: parsed.description || '',
+          est_market: parsed.estMarket || '$40 - $70'
+        }]).select().single();
+
+        if (refErr) throw refErr;
+
+        await supabaseClient.from('user_watchlists').insert([{
+          user_id: currentUser.id,
+          reference_id: newRef.id,
+          lighter_title: newRef.title,
+          model_sku: newRef.sku,
+          notes: newRef.description
+        }]);
+
+        inputEl.value = '';
+        alert(`Verified by AI!\n"${newRef.title}" (${newRef.year}) has been authenticated and added to your Watchlist.`);
+        loadAppData();
+
+      } catch (err) {
+        alert("Verification error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
 
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
+      const badge = document.getElementById('watchlistCountBadge');
       if (!container) return;
       container.innerHTML = '';
+      badge.innerText = `${userWatchlist.length} Tracked`;
 
       if (userWatchlist.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 py-6 text-center italic bg-[#12131c] rounded-xl border border-white/5">You aren't tracking any grails yet. Pin your first one above!</div>`;
+        container.innerHTML = `<div class="text-xs text-gray-500 py-8 text-center italic bg-[#12131c] rounded-xl border border-white/5">You aren't tracking any grails yet. Search our master catalog or tap + on any grail above!</div>`;
         return;
       }
 
       userWatchlist.forEach(w => {
-        // Cross reference radar: who owns this piece in the platform?
         const queryTerm = (w.model_sku || w.lighter_title).toLowerCase();
         const matches = allCommunityLighters.filter(l => 
           (l.modelNumber && l.modelNumber.toLowerCase().includes(queryTerm)) ||
@@ -926,6 +1126,7 @@
                 <i class="fa-solid fa-crosshairs text-amber-400"></i> ${w.lighter_title}
                 ${w.model_sku ? `<span class="text-[9px] font-mono bg-white/10 px-1.5 py-0.5 rounded text-gray-300">#${w.model_sku}</span>` : ''}
               </h4>
+              ${w.notes ? `<p class="text-[10px] text-gray-400 mt-0.5">${w.notes}</p>` : ''}
             </div>
             <button onclick="removeWatchlistItem('${w.id}')" class="text-gray-500 hover:text-red-400 text-xs p-1">
               <i class="fa-solid fa-trash-can"></i>
@@ -960,6 +1161,11 @@
         `;
         container.appendChild(card);
       });
+    }
+
+    async function removeWatchlistItem(id) {
+      await supabaseClient.from('user_watchlists').delete().eq('id', id);
+      loadAppData();
     }
 
     // Flame Popover Tooltip
@@ -1083,7 +1289,6 @@
             </div>
           `;
         } else {
-          // Market View
           const diff = item.listingPrice - item.price;
           const deltaBadge = diff < 0 
             ? `<span class="text-[8px] text-emerald-400 font-bold bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">-$${Math.abs(diff).toFixed(0)}</span>`
@@ -1298,7 +1503,7 @@
       }
     }
 
-    // Inspection Window with Complete Specs Restored
+    // Inspection Window with Full Specs Restored
     function openInspectionWindow(id, isMarketView = false) {
       const source = isMarketView ? publicMarketCollection : myVaultCollection;
       const item = source.find(i => String(i.id) === String(id));
