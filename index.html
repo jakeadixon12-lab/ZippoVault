@@ -310,14 +310,24 @@
       renderCollection();
     }
 
+    // Robust file uploader: sanitizes name, extension, and content type for mobile photos
     async function uploadImageToSupabase(file, prefix = 'lighter') {
       if (!supabaseClient || !file) return null;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      let fileExt = 'jpg';
+      if (file.name && file.name.includes('.')) {
+        fileExt = file.name.split('.').pop().toLowerCase();
+      }
+      
+      const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
       const { data, error } = await supabaseClient.storage
         .from('zippo-images')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+        .upload(fileName, file, { 
+          cacheControl: '3600', 
+          upsert: true,
+          contentType: file.type || 'image/jpeg'
+        });
 
       if (error) {
         console.error("Upload error:", error);
@@ -683,7 +693,6 @@ JSON FORMAT:
           if (error) throw error;
           await loadFromSupabase();
         } else {
-          // Fallback offline
           collection.unshift({
             id: Date.now().toString(),
             name,
