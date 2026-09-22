@@ -113,7 +113,10 @@
             <p id="profileBioDisplay" class="text-xs text-gray-400 mt-0.5">Zippo enthusiast & historic piece curator.</p>
             <div class="flex items-center gap-4 text-[11px] text-gray-400 mt-2">
               <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-amber-500"></i> <span id="profileLocationDisplay">Columbus, OH</span></span>
-              <span class="flex items-center gap-1"><i class="fa-solid fa-user-group text-blue-400"></i> <strong id="profileFriendsCount" class="text-white">0</strong> Friends</span>
+              <!-- Clickable Friends List Trigger -->
+              <button onclick="openFriendsModal()" class="flex items-center gap-1 hover:text-blue-400 transition cursor-pointer">
+                <i class="fa-solid fa-user-group text-blue-400"></i> <strong id="profileFriendsCount" class="text-white">0</strong> Friends
+              </button>
               <span class="flex items-center gap-1"><i class="fa-solid fa-certificate text-emerald-400"></i> <strong id="profileVouchCount" class="text-white">0</strong> Vouches</span>
             </div>
           </div>
@@ -145,6 +148,103 @@
           </button>
         </div>
         <div id="ledgerListContainer" class="space-y-2 max-h-[360px] overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- NEW: Collecting Tab Viewport (Intro to Collecting & Watchlist) -->
+    <section id="collectingViewport" class="hidden space-y-4 pb-12">
+      <!-- Section Tabs -->
+      <div class="flex bg-[#12131c] p-1 rounded-xl border border-white/10 text-xs font-bold">
+        <button id="collectingTabGuideBtn" onclick="switchCollectingSubTab('GUIDE')" class="flex-1 py-1.5 rounded-lg bg-amber-500 text-black shadow transition">
+          <i class="fa-solid fa-graduation-cap mr-1"></i> Intro & Grading Guide
+        </button>
+        <button id="collectingTabWatchlistBtn" onclick="switchCollectingSubTab('WATCHLIST')" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-binoculars mr-1"></i> Watchlist & Grail Radar
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Intro into Collecting & Grading -->
+      <div id="collectingGuideSection" class="space-y-3">
+        <div class="card-surface p-4 rounded-2xl border border-white/10 space-y-3">
+          <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-2">
+            <i class="fa-solid fa-book-bookmark"></i> Collector Fundamentals: How to Grade & Inspect
+          </h2>
+          <p class="text-xs text-gray-300 leading-relaxed">
+            Pocket lighter value is determined by four pillars: <strong>Authenticity</strong>, <strong>Box Completeness</strong>, <strong>Date Verification</strong>, and <strong>Surface Wear</strong>.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-1.5">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-certificate"></i> Mint in Box (MIB)
+            </span>
+            <p class="text-[11px] text-gray-300 leading-relaxed">
+              Unfired, flint tube unstuck, original orange safety seal intact (or cleanly preserved), matching outer sleeve, and guarantee paperwork. Commands 100% of fair secondary comps.
+            </p>
+          </div>
+
+          <div class="bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-1.5">
+            <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-fire-burner"></i> Excellent / Light User
+            </span>
+            <p class="text-[11px] text-gray-300 leading-relaxed">
+              Fired occasionally, clean wick chimney with light carbon, no deep hinge play or cam spring deformation. Typically 60%–75% of MIB valuation.
+            </p>
+          </div>
+
+          <div class="bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-1.5">
+            <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved"></i> What to Check: Hinge & Cam
+            </span>
+            <p class="text-[11px] text-gray-300 leading-relaxed">
+              Always inspect the barrel hinge. Factory welds should show clean circular spot marks without seam cracks. Loose "wobble" indicates heavy pocket carry.
+            </p>
+          </div>
+
+          <div class="bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-1.5">
+            <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation"></i> Red Flags: Restamps & Counterfeits
+            </span>
+            <p class="text-[11px] text-gray-300 leading-relaxed">
+              Watch for uneven laser-etched bottom stamps on pre-2000 models (originals were roll-stamped), mismatched insert date codes, or blurred Bradford PA lettering.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-[#12131c] p-3.5 rounded-xl border border-white/5 space-y-2">
+          <h3 class="text-xs font-bold text-amber-400 uppercase">Quick Era Stamp Cheat Sheet</h3>
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-300">
+            <div>• <strong>2001–Present:</strong> Letter (A–L) + 2-digit Year (e.g. A 23)</div>
+            <div>• <strong>1986–2000:</strong> Letter + Roman Numerals (e.g. G XII)</div>
+            <div>• <strong>1966–1985:</strong> Vertical Slashes ( | / \ )</div>
+            <div>• <strong>1958–1965:</strong> Dots flanking logo ( ••• ••• )</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 2: Watchlist & Grail Radar -->
+      <div id="collectingWatchlistSection" class="hidden space-y-3">
+        <div class="card-surface p-3 rounded-2xl border border-white/10 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-binoculars text-amber-400"></i> Pin a Grail to Your Watchlist
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input type="text" id="watchlistTitleInput" placeholder="Lighter name (e.g. 1994 D-Day Round Tin)" class="w-full bg-[#12131c] text-xs p-2 rounded-lg border border-white/10 text-white">
+            <input type="text" id="watchlistSkuInput" placeholder="SKU / Keyword (e.g. 19941)" class="w-full bg-[#12131c] text-xs p-2 rounded-lg border border-white/10 text-white font-mono">
+            <button onclick="addToWatchlist()" class="py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg shadow">
+              <i class="fa-solid fa-plus mr-1"></i> Track Grail
+            </button>
+          </div>
+        </div>
+
+        <!-- Watchlist Items & Radar Matches -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Tracked Grails & Community Radar</h3>
+          <div id="watchlistContainer" class="space-y-2"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -187,6 +287,10 @@
     <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
       <i class="fa-solid fa-camera text-lg"></i>
     </button>
+    <button onclick="switchMainView('COLLECTING')" id="navCollectingBtn" class="flex flex-col items-center text-gray-400 hover:text-amber-400 transition">
+      <i class="fa-solid fa-book-open text-sm"></i>
+      <span class="text-[10px] mt-1">Collecting</span>
+    </button>
     <button onclick="switchMainView('MARKET')" id="navMarketBtn" class="flex flex-col items-center text-gray-400 hover:text-emerald-400 transition">
       <i class="fa-solid fa-store text-sm"></i>
       <span class="text-[10px] mt-1">Market</span>
@@ -196,6 +300,38 @@
       <span class="text-[10px] mt-1">Profile</span>
     </button>
   </nav>
+
+  <!-- Friends Hub Modal -->
+  <div id="friendsModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-y-auto p-4 border border-white/10 space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-group text-blue-400"></i> My Friends Circle (<span id="friendsModalCount">0</span>)
+        </h3>
+        <button onclick="closeFriendsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div id="friendsListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <!-- Flame Info Popover Modal -->
+  <div id="flameInfoModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#191b26] rounded-2xl w-full max-w-xs p-4 border border-amber-500/30 text-center space-y-3 shadow-2xl">
+      <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-xl border border-amber-500/30">
+        <i class="fa-solid fa-fire"></i>
+      </div>
+      <div>
+        <h4 class="text-sm font-bold text-white">What does the Flame mean?</h4>
+        <p class="text-xs text-gray-300 leading-relaxed mt-1">
+          Flames (or <strong>Sparks</strong>) are community endorsements given by fellow collectors to applaud rare pieces, authentic stamps, and pristine showcases.
+        </p>
+      </div>
+      <button onclick="closeFlameInfoModal()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg">
+        Got it!
+      </button>
+    </div>
+  </div>
 
   <!-- Community Public Passport Modal -->
   <div id="publicPassportModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
@@ -462,11 +598,13 @@
     let userProfile = null;
     let viewMode = 'VAULT';
     let currentLedgerTab = 'LISTINGS';
+    let currentCollectingTab = 'GUIDE';
 
     let myVaultCollection = [];
     let publicMarketCollection = [];
     let allPublicProfiles = [];
     let allCommunityLighters = [];
+    let userWatchlist = [];
     let friendsList = [];
     let vouchesList = [];
     let sparksMap = {};
@@ -604,7 +742,11 @@
         const { data: vouches } = await supabaseClient.from('collector_vouches').select('*').eq('vouched_user_id', currentUser.id);
         if (vouches) vouchesList = vouches;
 
+        const { data: watchData } = await supabaseClient.from('user_watchlists').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        if (watchData) userWatchlist = watchData;
+
         renderProfileView();
+        renderWatchlist();
       } else {
         myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
       }
@@ -655,9 +797,11 @@
       }));
     }
 
+    // View Switching: Vault, Collecting, Market, Profile
     function switchMainView(mode) {
       viewMode = mode;
       const navVaultBtn = document.getElementById('navVaultBtn');
+      const navCollectingBtn = document.getElementById('navCollectingBtn');
       const navMarketBtn = document.getElementById('navMarketBtn');
       const navProfileBtn = document.getElementById('navProfileBtn');
       const headerBadge = document.getElementById('headerViewBadge');
@@ -665,11 +809,20 @@
       const itemsGrid = document.getElementById('itemsGrid');
       const emptyState = document.getElementById('emptyState');
       const profileViewport = document.getElementById('profileViewport');
+      const collectingViewport = document.getElementById('collectingViewport');
       const batchTray = document.getElementById('batchTray');
 
+      // Reset
       navVaultBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
+      navCollectingBtn.className = "flex flex-col items-center text-gray-400 hover:text-amber-400 transition";
       navMarketBtn.className = "flex flex-col items-center text-gray-400 hover:text-emerald-400 transition";
       navProfileBtn.className = "flex flex-col items-center text-gray-400 hover:text-white transition";
+
+      itemsGrid.classList.add('hidden');
+      profileViewport.classList.add('hidden');
+      collectingViewport.classList.add('hidden');
+      emptyState.classList.add('hidden');
+      batchTray.classList.add('hidden');
 
       if (mode === 'VAULT') {
         navVaultBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
@@ -677,17 +830,21 @@
         headerBadge.className = "text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
         topSearchControls.classList.remove('hidden');
         itemsGrid.classList.remove('hidden');
-        profileViewport.classList.add('hidden');
         batchTray.classList.remove('hidden');
         renderCurrentView();
+      } else if (mode === 'COLLECTING') {
+        navCollectingBtn.className = "flex flex-col items-center text-amber-500 font-semibold transition";
+        headerBadge.innerText = "Collecting Guide";
+        headerBadge.className = "text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20";
+        topSearchControls.classList.add('hidden');
+        collectingViewport.classList.remove('hidden');
+        renderWatchlist();
       } else if (mode === 'MARKET') {
         navMarketBtn.className = "flex flex-col items-center text-emerald-400 font-semibold transition";
         headerBadge.innerText = "Marketplace";
         headerBadge.className = "text-[10px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20";
         topSearchControls.classList.remove('hidden');
         itemsGrid.classList.remove('hidden');
-        profileViewport.classList.add('hidden');
-        batchTray.classList.add('hidden');
         renderCurrentView();
       } else if (mode === 'PROFILE') {
         if (!currentUser) return toggleAuthModal();
@@ -695,16 +852,176 @@
         headerBadge.innerText = "Profile";
         headerBadge.className = "text-[10px] font-semibold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full border border-white/20";
         topSearchControls.classList.add('hidden');
-        itemsGrid.classList.add('hidden');
-        emptyState.classList.add('hidden');
         profileViewport.classList.remove('hidden');
-        batchTray.classList.add('hidden');
         renderProfileView();
       }
     }
 
+    // Collecting Sub-Tabs
+    function switchCollectingSubTab(tab) {
+      currentCollectingTab = tab;
+      const b1 = document.getElementById('collectingTabGuideBtn');
+      const b2 = document.getElementById('collectingTabWatchlistBtn');
+      const gSection = document.getElementById('collectingGuideSection');
+      const wSection = document.getElementById('collectingWatchlistSection');
+
+      if (tab === 'GUIDE') {
+        b1.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
+        b2.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+        gSection.classList.remove('hidden');
+        wSection.classList.add('hidden');
+      } else {
+        b2.className = "flex-1 py-1.5 rounded-lg bg-amber-500 text-black font-bold shadow transition";
+        b1.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+        wSection.classList.remove('hidden');
+        gSection.classList.add('hidden');
+        renderWatchlist();
+      }
+    }
+
+    async function addToWatchlist() {
+      if (!currentUser) return toggleAuthModal();
+      const title = document.getElementById('watchlistTitleInput').value.trim();
+      const sku = document.getElementById('watchlistSkuInput').value.trim();
+      if (!title) return alert("Please enter a lighter name or model.");
+
+      const { error } = await supabaseClient.from('user_watchlists').insert([{ user_id: currentUser.id, lighter_title: title, model_sku: sku }]);
+      if (error) alert("Error adding: " + error.message);
+      else {
+        document.getElementById('watchlistTitleInput').value = '';
+        document.getElementById('watchlistSkuInput').value = '';
+        loadAppData();
+      }
+    }
+
+    async function removeWatchlistItem(id) {
+      await supabaseClient.from('user_watchlists').delete().eq('id', id);
+      loadAppData();
+    }
+
+    function renderWatchlist() {
+      const container = document.getElementById('watchlistContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (userWatchlist.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-500 py-6 text-center italic bg-[#12131c] rounded-xl border border-white/5">You aren't tracking any grails yet. Pin your first one above!</div>`;
+        return;
+      }
+
+      userWatchlist.forEach(w => {
+        // Cross reference radar: who owns this piece in the platform?
+        const queryTerm = (w.model_sku || w.lighter_title).toLowerCase();
+        const matches = allCommunityLighters.filter(l => 
+          (l.modelNumber && l.modelNumber.toLowerCase().includes(queryTerm)) ||
+          l.name.toLowerCase().includes(queryTerm)
+        );
+
+        const card = document.createElement('div');
+        card.className = "bg-[#12131c] p-3 rounded-xl border border-white/5 space-y-2";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-gray-100 flex items-center gap-2">
+                <i class="fa-solid fa-crosshairs text-amber-400"></i> ${w.lighter_title}
+                ${w.model_sku ? `<span class="text-[9px] font-mono bg-white/10 px-1.5 py-0.5 rounded text-gray-300">#${w.model_sku}</span>` : ''}
+              </h4>
+            </div>
+            <button onclick="removeWatchlistItem('${w.id}')" class="text-gray-500 hover:text-red-400 text-xs p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <!-- Radar Match Status -->
+          <div class="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px]">
+            <span class="text-gray-400">Community Radar:</span>
+            ${matches.length > 0 ? `
+              <span class="text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                <i class="fa-solid fa-check"></i> ${matches.length} Collector(s) Own This
+              </span>
+            ` : `
+              <span class="text-gray-500 italic">No community owners registered yet</span>
+            `}
+          </div>
+
+          ${matches.length > 0 ? `
+            <div class="flex gap-1.5 overflow-x-auto pt-1 hide-scrollbar">
+              ${matches.map(m => {
+                const owner = allPublicProfiles.find(p => p.id === m.userId);
+                const ownerName = owner ? owner.username : 'Collector';
+                return `
+                  <button onclick="openPublicPassport('${m.userId}')" class="flex items-center gap-1 bg-[#191b26] hover:bg-[#202333] px-2 py-1 rounded border border-white/10 text-[9px] text-gray-300 transition flex-shrink-0">
+                    <i class="fa-solid fa-circle-user text-amber-400"></i> ${ownerName}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Flame Popover Tooltip
+    function showFlameInfo(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('flameInfoModal').classList.remove('hidden');
+    }
+    function closeFlameInfoModal() {
+      document.getElementById('flameInfoModal').classList.add('hidden');
+    }
+
+    // Friends Modal & Interactive Viewer
+    function openFriendsModal() {
+      if (!currentUser) return toggleAuthModal();
+      const modal = document.getElementById('friendsModal');
+      const container = document.getElementById('friendsListContainer');
+      const countLabel = document.getElementById('friendsModalCount');
+
+      countLabel.innerText = friendsList.length;
+      container.innerHTML = '';
+
+      if (friendsList.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-500 py-8 text-center italic">No friends added yet. Browse the Live Market and tap on seller handles to add collector friends!</div>`;
+      } else {
+        friendsList.forEach(f => {
+          const friendUserId = (f.user_id === currentUser.id) ? f.friend_id : f.user_id;
+          const friendProfile = allPublicProfiles.find(p => p.id === friendUserId);
+          const friendName = friendProfile ? friendProfile.username : 'Collector';
+          const friendVaultItems = allCommunityLighters.filter(l => l.userId === friendUserId);
+
+          const row = document.createElement('div');
+          row.className = "bg-[#12131c] p-3 rounded-xl border border-white/5 flex items-center justify-between hover:border-blue-500/30 transition";
+          row.innerHTML = `
+            <div class="flex items-center gap-3 truncate">
+              <div class="w-10 h-10 rounded-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                ${friendProfile && friendProfile.avatar_url ? `<img src="${friendProfile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-gray-500"></i>`}
+              </div>
+              <div class="truncate">
+                <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                  ${friendName}
+                  <span class="text-[8px] bg-blue-500/20 text-blue-400 px-1 rounded">Friend</span>
+                </h4>
+                <p class="text-[10px] text-gray-400">${friendVaultItems.length} lighters in vault</p>
+              </div>
+            </div>
+            <button onclick="closeFriendsModal(); openPublicPassport('${friendUserId}')" class="px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-bold rounded-lg border border-blue-500/30 flex items-center gap-1">
+              <span>View Vault</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          `;
+          container.appendChild(row);
+        });
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeFriendsModal() {
+      document.getElementById('friendsModal').classList.add('hidden');
+    }
+
     function renderCurrentView() {
-      if (viewMode === 'PROFILE') return;
+      if (viewMode === 'PROFILE' || viewMode === 'COLLECTING') return;
 
       const grid = document.getElementById('itemsGrid');
       const search = document.getElementById('searchInput').value.toLowerCase();
@@ -759,11 +1076,14 @@
               <p class="text-[9px] text-amber-400/80 font-mono truncate">${item.modelNumber ? '#' + item.modelNumber : (item.year || '')}</p>
               <div class="flex items-center justify-between mt-0.5">
                 <span class="text-xs font-extrabold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
-                <span class="text-[9px] text-amber-400/90 flex items-center gap-0.5"><i class="fa-solid fa-fire text-[8px]"></i> ${sparksCount}</span>
+                <button onclick="event.stopPropagation(); showFlameInfo(event)" class="text-[9px] text-amber-400/90 flex items-center gap-0.5 cursor-pointer hover:scale-110">
+                  <i class="fa-solid fa-fire text-[8px]"></i> ${sparksCount}
+                </button>
               </div>
             </div>
           `;
         } else {
+          // Market View
           const diff = item.listingPrice - item.price;
           const deltaBadge = diff < 0 
             ? `<span class="text-[8px] text-emerald-400 font-bold bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30">-$${Math.abs(diff).toFixed(0)}</span>`
@@ -773,7 +1093,7 @@
           const sellerName = seller ? seller.username : 'Collector';
 
           card.addEventListener('click', (e) => {
-            if (e.target.closest('.seller-passport-btn')) return;
+            if (e.target.closest('.seller-passport-btn') || e.target.closest('.spark-btn')) return;
             openInspectionWindow(item.id, true);
           });
 
@@ -978,7 +1298,7 @@
       }
     }
 
-    // Comprehensive Inspection Window for Vault & Marketplace
+    // Inspection Window with Complete Specs Restored
     function openInspectionWindow(id, isMarketView = false) {
       const source = isMarketView ? publicMarketCollection : myVaultCollection;
       const item = source.find(i => String(i.id) === String(id));
@@ -1063,7 +1383,6 @@
       const appraisalDate = item.lastAppraisedAt ? new Date(item.lastAppraisedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Initial Scan';
 
       return `
-        <!-- Listing & Showcase Controls for Owner vs Floor Spread for Buyer -->
         ${!isMarketView ? `
           <div class="bg-gradient-to-r from-amber-950/20 via-[#12131c] to-emerald-950/20 p-2.5 rounded-xl border border-white/10 space-y-2">
             <div class="flex items-center justify-between">
@@ -1101,7 +1420,11 @@
             <div class="grid grid-cols-2 gap-3 pt-0.5">
               <div>
                 <span class="text-[9px] text-gray-400 uppercase block">Asking Price</span>
-                <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>               </div>               <div>                 <span class="text-[9px] text-gray-400 uppercase block">AI Comp</span>                 <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
+                <span class="text-lg font-black text-emerald-400">$${askingPrice.toFixed(2)}</span>
+              </div>
+              <div>
+                <span class="text-[9px] text-gray-400 uppercase block">AI Comp</span>
+                <span class="text-sm font-bold text-gray-200 font-mono">$${appraisedPrice.toFixed(2)}</span>
               </div>
             </div>
             <div class="text-[10px] pt-1 border-t border-white/5 flex items-center justify-between">
@@ -1113,7 +1436,6 @@
           </div>
         `}
 
-        <!-- Special Limited / COTY Make Number -->
         ${item.editionNumber ? `
           <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
             <span class="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1.5">
@@ -1123,7 +1445,6 @@
           </div>
         ` : ''}
 
-        <!-- Dual Primary Photos -->
         <div class="grid grid-cols-2 gap-2">
           <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 relative">
             <span class="absolute top-1 left-1 bg-black/70 text-[8px] text-gray-300 px-1 py-0.5 rounded">Face</span>
@@ -1135,7 +1456,6 @@
           </div>
         </div>
 
-        <!-- Packaging & Gallery Photos -->
         <div class="bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-[9px] uppercase font-bold text-gray-400 flex items-center gap-1">
@@ -1148,7 +1468,6 @@
               </label>
             ` : ''}
           </div>
-          
           <div class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
             ${extraImages.length === 0 ? '<span class="text-[10px] text-gray-500 py-2 italic">No additional photos uploaded.</span>' : ''}
             ${extraImages.map((imgUrl, idx) => `
@@ -1164,7 +1483,6 @@
           </div>
         </div>
 
-        <!-- Specs & Hardware Overview -->
         <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div>
             <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Inspected Year & Tier</span>
@@ -1176,7 +1494,6 @@
           </div>
         </div>
 
-        <!-- Secondary Market Analysis & Comps -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
           <h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
             <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Market Intelligence & Comps</span>
@@ -1185,7 +1502,6 @@
           <p class="text-xs text-gray-300 leading-relaxed font-sans">${item.marketNotes || 'Secondary market value estimated based on verified eBay sold listings, collector forum benchmarks, and condition tier.'}</p>
         </div>
 
-        <!-- Stamp Decoding Breakdown -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1">
           <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
@@ -1193,7 +1509,6 @@
           <p class="text-xs text-gray-300 leading-relaxed">${item.stampDetails || 'No stamp details recorded.'}</p>
         </div>
 
-        <!-- Design Specs, Finish, and Artwork -->
         <div class="bg-[#12131c] p-2.5 rounded-lg border border-white/5 space-y-1.5">
           <h4 class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
@@ -1261,10 +1576,6 @@
             <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
           </div>
           <div>
-            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
-            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
-          </div>
-          <div>
             <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
             <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
           </div>
@@ -1301,7 +1612,6 @@
       item.condition = document.getElementById(`edit_condition_${winId}`).value;
       item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
       item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
-      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
       item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
       item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
 
@@ -1314,7 +1624,6 @@
           condition: item.condition,
           price: item.price,
           stamp_details: item.stampDetails,
-          market_notes: item.marketNotes,
           finish: item.finish,
           artwork: item.artwork
         };
