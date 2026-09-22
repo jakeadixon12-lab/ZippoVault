@@ -68,16 +68,32 @@
   <!-- Dynamic Multi-Window Container -->
   <div id="floatingWindowsContainer" class="pointer-events-none fixed inset-0 z-40 overflow-hidden"></div>
 
-  <!-- Sticky Batch Tray -->
-  <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20">
+  <!-- Adaptive Bottom Tray (Default: Clean Total; Selected: Batch Action Suite) -->
+  <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 px-4 py-2.5 flex items-center justify-between z-20 transition-all">
     <div class="flex items-center gap-2">
-      <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500">
-      <label for="selectAllCheckbox" id="selectCount" class="text-xs text-gray-300">Select All (0)</label>
+      <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
+      <label for="selectAllCheckbox" id="selectCount" class="text-xs text-gray-300 cursor-pointer">Select All (0)</label>
     </div>
-    <div class="flex items-center gap-3">
-      <span id="selectedTotal" class="text-xs font-semibold text-emerald-400">Total: $0.00</span>
-      <button onclick="deleteSelected()" class="bg-red-500/20 text-red-400 text-xs px-3 py-1.5 rounded-md hover:bg-red-500/30">Delete</button>
-      <button onclick="exportJSON()" class="bg-[#6366F1] text-white text-xs px-3 py-1.5 rounded-md font-medium hover:bg-indigo-600">Export</button>
+
+    <div class="flex items-center gap-2">
+      <!-- Hidden until at least 1 lighter is checked -->
+      <div id="batchActionButtons" class="hidden flex items-center gap-1.5">
+        <button id="batchAppraiseBtn" onclick="batchReappraiseSelected()" class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1.5 rounded-md hover:bg-amber-500/30 flex items-center gap-1 border border-amber-500/30">
+          <i class="fa-solid fa-arrows-rotate"></i> <span>Re-Appraise</span>
+        </button>
+        <button onclick="deleteSelected()" class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1.5 rounded-md hover:bg-red-500/30 border border-red-500/20">
+          Delete
+        </button>
+        <button onclick="exportJSON()" class="bg-[#6366F1] text-white text-xs px-2.5 py-1.5 rounded-md font-medium hover:bg-indigo-600">
+          Export
+        </button>
+      </div>
+
+      <!-- Vault total sits clean in the corner -->
+      <div class="text-right pl-2">
+        <span class="text-[9px] text-gray-400 block -mb-0.5" id="totalLabel">Vault Total</span>
+        <span id="selectedTotal" class="text-xs font-bold text-emerald-400">$0.00</span>
+      </div>
     </div>
   </aside>
 
@@ -280,7 +296,8 @@
         frontImg: row.front_img,
         stampImg: row.stamp_img,
         extraImgs: row.extra_imgs || [],
-        marketNotes: row.market_notes || ''
+        marketNotes: row.market_notes || '',
+        lastAppraisedAt: row.last_appraised_at || row.created_at || new Date().toISOString()
       }));
 
       localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
@@ -402,7 +419,7 @@
       updateBatchTray();
     }
 
-    // Dynamic Multi-Window Inspector with In-place Editing, Photo Gallery & Valuation Comps
+    // Dynamic Multi-Window Inspector
     function openInspectionWindow(id) {
       const item = collection.find(i => String(i.id) === String(id));
       if (!item) return;
@@ -444,7 +461,10 @@
             <span class="text-xs font-bold text-gray-200 truncate">${item.name}</span>
           </div>
           <div class="flex items-center gap-1">
-            <button onclick="toggleCardEdit('${winId}', '${item.id}')" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
+            <button onclick="reappraiseSingleLighter('${item.id}', '${winId}')" title="Re-Appraise Market Value" class="text-gray-400 hover:text-emerald-400 p-1 text-xs">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+            <button onclick="toggleCardEdit('${winId}', '${item.id}')" title="Edit Lighter" class="text-gray-400 hover:text-amber-400 p-1 text-xs">
               <i class="fa-solid ${isEditing ? 'fa-xmark' : 'fa-pen-to-square'}"></i>
             </button>
             <button onclick="closeInspectionWindow('${winId}')" class="text-gray-400 hover:text-white p-1">
@@ -463,6 +483,8 @@
     }
 
     function renderViewContent(item, winId, extraImages) {
+      const appraisalDate = item.lastAppraisedAt ? new Date(item.lastAppraisedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Initial Scan';
+
       return `
         ${item.editionNumber ? `
           <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 flex items-center justify-between">
@@ -513,7 +535,10 @@
         <!-- Valuation & Condition Card -->
         <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-2 rounded-lg border border-white/5">
           <div>
-            <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Secondary Value</span>
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
+              <span class="text-[8px] text-emerald-400/80 font-mono">${appraisalDate}</span>
+            </div>
             <span class="text-base font-bold text-emerald-400">$${Number(item.price).toFixed(2)}</span>
           </div>
           <div>
@@ -676,7 +701,143 @@
       if (windowEl) renderWindowContent(windowEl, winId, item, false);
     }
 
-    // Upload supplemental aesthetic photos
+    // Single Lighter Re-Appraisal Core Engine
+    async function requestMarketValuation(item) {
+      const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
+      if (!apiKey) throw new Error("Missing Gemini API Key");
+
+      const prompt = `You are a certified Zippo lighter appraiser specializing in secondary market price indices.
+Provide an updated, realistic secondary market valuation and comp breakdown for this specific lighter:
+- Model Name: "${item.name}"
+- Catalog SKU: "${item.modelNumber || 'N/A'}"
+- Edition / Make Number: "${item.editionNumber || 'N/A'}"
+- Year / Era: "${item.year || 'Modern'}"
+- Tier: "${item.tier}"
+- Condition: "${item.condition}"
+- Recorded Finish/Art: "${item.finish} | ${item.artwork}"
+
+Analyze secondary market trends (e.g. eBay completed sold comps, collector swap sheets, specialty retail MSRP vs appreciation).
+Respond STRICTLY in raw JSON format with no markdown, backticks, or other text:
+{
+  "price": number (estimated fair secondary market value in USD as a plain number),
+  "marketNotes": "Concise breakdown summarizing verified eBay completed sold comp benchmarks, MSRP delta, and collector liquidity."
+}`;
+
+      const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.6-pro'];
+      let lastError = null;
+
+      for (const model of candidateModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { response_mime_type: "application/json" }
+            })
+          });
+
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+
+          return JSON.parse(data.candidates[0].content.parts[0].text);
+        } catch (err) {
+          lastError = err;
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+      throw lastError || new Error("Valuation models busy");
+    }
+
+    async function reappraiseSingleLighter(itemId, winId) {
+      const item = collection.find(i => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const windowEl = document.getElementById(winId);
+      const refreshBtn = windowEl ? windowEl.querySelector('button[title="Re-Appraise Market Value"]') : null;
+      if (refreshBtn) refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-emerald-400"></i>';
+
+      try {
+        const valData = await requestMarketValuation(item);
+        item.price = Number(valData.price) || item.price;
+        item.marketNotes = valData.marketNotes || item.marketNotes;
+        item.lastAppraisedAt = new Date().toISOString();
+
+        if (supabaseClient) {
+          await supabaseClient.from('lighters').update({
+            price: item.price,
+            market_notes: item.marketNotes,
+            last_appraised_at: item.lastAppraisedAt
+          }).eq('id', item.id);
+        }
+
+        localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+        renderCollection();
+        if (windowEl) renderWindowContent(windowEl, winId, item, false);
+      } catch (err) {
+        alert("Valuation update failed: " + err.message);
+      } finally {
+        if (refreshBtn) refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+      }
+    }
+
+    // Batch Re-Appraisal for Selected Lighters
+    async function batchReappraiseSelected() {
+      if (selectedIds.size === 0) return;
+      const count = selectedIds.size;
+      if (!confirm(`Re-appraise current market values for ${count} selected lighter(s)?`)) return;
+
+      const batchBtn = document.getElementById('batchAppraiseBtn');
+      const originalHtml = batchBtn.innerHTML;
+      batchBtn.disabled = true;
+
+      const ids = Array.from(selectedIds);
+      let successCount = 0;
+
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const item = collection.find(l => String(l.id) === String(id));
+        if (!item) continue;
+
+        batchBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${i + 1}/${count}</span>`;
+
+        try {
+          const valData = await requestMarketValuation(item);
+          item.price = Number(valData.price) || item.price;
+          item.marketNotes = valData.marketNotes || item.marketNotes;
+          item.lastAppraisedAt = new Date().toISOString();
+
+          if (supabaseClient) {
+            await supabaseClient.from('lighters').update({
+              price: item.price,
+              market_notes: item.marketNotes,
+              last_appraised_at: item.lastAppraisedAt
+            }).eq('id', item.id);
+          }
+          successCount++;
+        } catch (e) {
+          console.warn(`Failed re-appraisal on ${item.name}`, e);
+        }
+
+        // Small delay between calls to respect rate limits
+        await new Promise(r => setTimeout(r, 600));
+      }
+
+      localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+      renderCollection();
+
+      // Refresh any open floating inspection cards
+      document.querySelectorAll('#floatingWindowsContainer > div').forEach(winEl => {
+        const rawId = winEl.id.split('_')[1];
+        const updatedItem = collection.find(l => String(l.id) === String(rawId));
+        if (updatedItem) renderWindowContent(winEl, winEl.id, updatedItem, false);
+      });
+
+      batchBtn.innerHTML = originalHtml;
+      batchBtn.disabled = false;
+      alert(`Completed re-appraisal for ${successCount} of ${count} lighters.`);
+    }
+
     async function uploadExtraPhoto(itemId, winId, input) {
       const file = input.files[0];
       if (!file) return;
@@ -818,13 +979,38 @@
       renderCollection();
     }
 
+    // Adaptive Tray UI: Clean Vault Total vs Full Action Suite
     function updateBatchTray() {
-      document.getElementById('selectCount').innerText = `Select All (${selectedIds.size})`;
-      const total = Array.from(selectedIds).reduce((sum, id) => {
-        const found = collection.find(i => String(i.id) === String(id));
-        return sum + (found ? Number(found.price) : 0);
-      }, 0);
-      document.getElementById('selectedTotal').innerText = `Total: $${total.toFixed(2)}`;
+      const count = selectedIds.size;
+      const selectAllEl = document.getElementById('selectAllCheckbox');
+      const selectCountEl = document.getElementById('selectCount');
+      const actionButtons = document.getElementById('batchActionButtons');
+      const totalLabelEl = document.getElementById('totalLabel');
+      const totalEl = document.getElementById('selectedTotal');
+
+      selectAllEl.checked = count > 0 && count === collection.length;
+      selectCountEl.innerText = count > 0 ? `Selected (${count})` : `Select All (0)`;
+
+      if (count > 0) {
+        // Show action buttons
+        actionButtons.classList.remove('hidden');
+        actionButtons.classList.add('flex');
+        totalLabelEl.innerText = "Selected Sum";
+
+        const selectedSum = Array.from(selectedIds).reduce((sum, id) => {
+          const found = collection.find(i => String(i.id) === String(id));
+          return sum + (found ? Number(found.price) : 0);
+        }, 0);
+        totalEl.innerText = `$${selectedSum.toFixed(2)}`;
+      } else {
+        // Hide action buttons, show full vault portfolio value in bottom right corner
+        actionButtons.classList.add('hidden');
+        actionButtons.classList.remove('flex');
+        totalLabelEl.innerText = "Vault Total";
+
+        const portfolioSum = collection.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+        totalEl.innerText = `$${portfolioSum.toFixed(2)}`;
+      }
     }
 
     async function deleteSelected() {
@@ -915,7 +1101,7 @@
       });
     }
 
-    // AI Dual-Image Analyzer with Valuation Sources & Market History
+    // Initial AI Dual-Image Scanner
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) {
@@ -946,12 +1132,9 @@ ZIPPO DATE CODE DECODING RULES:
 - 1958 to 1985: Dots and slashes flanking the Zippo logo.
 - Location: "BRADFORD, PA. MADE IN U.S.A."
 
-SPECIAL VALUATION & MARKET COMP RULES:
-- Analyze secondary market pricing across verified eBay sold listings, specialty retailer historical pricing (e.g., Riley's 66, Lucas Lighters, Z-Connect member drops), and collector conventions.
-- Provide a structured explanation in "marketNotes" describing:
-  1) Verified market sources checked (e.g. eBay completed sales, collector swap sheets).
-  2) Original retail price vs current secondary market trend.
-  3) Value differential between unfired (Mint in Box) vs fired loose condition.
+SPECIAL COTY & NUMBERED EDITIONS:
+- Check if this lighter is an official Collectible of the Year (COTY) or limited edition.
+- Look closely for any laser-engraved edition numbering sequence typically found on the side spine, bottom, or reverse face (e.g. 05761/20020 or 1234/12000). If present, output this exact string in "editionNumber".
 
 JSON FORMAT:
 {
@@ -982,12 +1165,7 @@ JSON FORMAT:
           parts.push({ inline_data: { mime_type: 'image/jpeg', data: stampBase64 } });
         }
 
-        const candidateModels = [
-          'gemini-3.6-flash',
-          'gemini-3.5-flash',
-          'gemini-3.6-pro'
-        ];
-
+        const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.6-pro'];
         let success = false;
         let lastError = null;
 
@@ -1058,6 +1236,7 @@ JSON FORMAT:
         const marketNotes = document.getElementById('formMarketNotes').value.trim();
         const condition = document.getElementById('formCondition').value;
         const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
+        const now = new Date().toISOString();
 
         let year = "Modern";
         const yearMatch = stampDetails.match(/\b(19\d{2}|20\d{2})\b/);
@@ -1086,7 +1265,8 @@ JSON FORMAT:
             price,
             front_img: frontImgUrl,
             stamp_img: stampImgUrl,
-            extra_imgs: []
+            extra_imgs: [],
+            last_appraised_at: now
           };
 
           if (editionNumber) payload.edition_number = editionNumber;
@@ -1110,7 +1290,8 @@ JSON FORMAT:
             price,
             frontImg: frontImgUrl,
             stampImg: stampImgUrl,
-            extraImgs: []
+            extraImgs: [],
+            lastAppraisedAt: now
           });
           localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
           renderCollection();
