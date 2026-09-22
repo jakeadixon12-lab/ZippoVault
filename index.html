@@ -10,8 +10,6 @@
     body { background-color: #0d0e15; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .card-surface { background-color: #191b26; border: 1px solid rgba(255, 255, 255, 0.08); }
     .bottom-nav { background-color: #12131c; border-top: 1px solid rgba(255, 255, 255, 0.08); }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="pb-32 select-none">
@@ -47,9 +45,7 @@
 
   <!-- Main Vault Grid -->
   <main class="p-3">
-    <div id="vaultGrid" class="grid grid-cols-3 gap-2.5">
-      <!-- Injected by JavaScript -->
-    </div>
+    <div id="vaultGrid" class="grid grid-cols-3 gap-2.5"></div>
     <div id="emptyState" class="hidden text-center py-16 text-gray-500">
       <i class="fa-solid fa-box-open text-4xl mb-3"></i>
       <p class="text-sm">No Zippos in vault. Tap Scan to add one.</p>
@@ -57,7 +53,7 @@
   </main>
 
   <!-- Sticky Batch Action Tray -->
-  <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20 transition-transform">
+  <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20">
     <div class="flex items-center gap-2">
       <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500">
       <label for="selectAllCheckbox" id="selectCount" class="text-xs text-gray-300">Select All (0)</label>
@@ -69,7 +65,7 @@
     </div>
   </aside>
 
-  <!-- Fixed Bottom Navigation -->
+  <!-- Bottom Navigation -->
   <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
     <button class="flex flex-col items-center text-gray-400 hover:text-white">
       <i class="fa-solid fa-chart-pie text-sm"></i>
@@ -91,6 +87,69 @@
       <span class="text-[10px] mt-1">Config</span>
     </button>
   </nav>
+
+  <!-- Lighter Detail Modal (Pop-up on Card Tap) -->
+  <div id="detailModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <div>
+          <span id="modalTierBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 uppercase">COTY</span>
+          <h2 id="modalTitle" class="text-base font-bold text-white mt-1">Zippo Model</h2>
+          <p id="modalModelNum" class="text-xs text-amber-400/90 font-mono"></p>
+        </div>
+        <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
+          <img id="modalFrontImg" class="w-full h-full object-cover">
+        </div>
+        <div class="aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+          <img id="modalStampImg" class="w-full h-full object-cover hidden">
+          <span id="noStampPlaceholder" class="text-[11px] text-gray-500 text-center px-2">No Stamp Photo</span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-3 rounded-lg border border-white/5">
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
+          <span id="modalPrice" class="text-lg font-bold text-emerald-400">$0.00</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider block">Condition</span>
+          <span id="modalCondition" class="text-xs text-gray-200 font-medium">Loose / Fired</span>
+        </div>
+      </div>
+
+      <!-- Stamp Breakdown Section -->
+      <div class="bg-[#12131c] p-3 rounded-lg border border-white/5">
+        <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
+        </h4>
+        <p id="modalStampDetails" class="text-xs text-gray-300 leading-relaxed"></p>
+      </div>
+
+      <!-- Design & Catalog Specifications -->
+      <div class="bg-[#12131c] p-3 rounded-lg border border-white/5 space-y-2">
+        <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
+        </h4>
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase block">Finish & Case:</span>
+          <p id="modalFinish" class="text-xs text-gray-300"></p>
+        </div>
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase block">Artwork Technique:</span>
+          <p id="modalArtwork" class="text-xs text-gray-300"></p>
+        </div>
+      </div>
+
+      <button onclick="closeDetailModal()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium text-xs rounded-lg">
+        Close
+      </button>
+    </div>
+  </div>
 
   <!-- AI Scanner / Add Modal -->
   <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
@@ -121,13 +180,13 @@
       <!-- Extracted Fields Review Form -->
       <div class="mt-4 space-y-3 pt-3 border-t border-white/10">
         <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Model / Name</label>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Official Model Name</label>
           <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Year / Stamp</label>
-            <input type="text" id="formYear" placeholder="e.g. 2018 (B 18)" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Model Number</label>
+            <input type="text" id="formModelNum" placeholder="e.g. 48247" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
           </div>
           <div>
             <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Category Tier</label>
@@ -139,11 +198,23 @@
             </select>
           </div>
         </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Stamp Decoding</label>
+          <input type="text" id="formStampDetails" placeholder="e.g. Manufactured in January 2023 (Stamp: A 23)" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Finish & Material</label>
+          <input type="text" id="formFinish" placeholder="e.g. Translucent Black Ice coating over brass" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Artwork Details</label>
+          <input type="text" id="formArtwork" placeholder="e.g. Laser-engraved silver geometric lines" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Condition</label>
             <select id="formCondition" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
-              <option value="Loose/Fired">Loose / Fired</option>
+              <option value="Loose / Fired">Loose / Fired</option>
               <option value="Mint in Box">Mint in Box (Unfired)</option>
             </select>
           </div>
@@ -159,7 +230,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal (API Key & Storage) -->
+  <!-- Settings Modal -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -169,7 +240,7 @@
       <div>
         <label class="block text-xs text-gray-400 mb-1">Gemini Vision API Key</label>
         <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
-        <p class="text-[10px] text-gray-500 mt-1">Stored locally in your browser. Get a key at Google AI Studio.</p>
+        <p class="text-[10px] text-gray-500 mt-1">Saved locally to your phone's browser.</p>
       </div>
       <button onclick="saveApiKey()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Key</button>
     </div>
@@ -179,30 +250,31 @@
     const defaultData = [
       {
         id: "1",
-        name: "2018 Golden Scroll",
-        tier: "COTY",
-        year: "2018",
-        price: 115.00,
-        condition: "Loose/Fired",
-        img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80"
+        name: "Art Deco Black Ice Windproof",
+        modelNumber: "48247",
+        tier: "STANDARD",
+        year: "2023",
+        price: 36.00,
+        condition: "Loose / Fired",
+        stampDetails: "Manufactured in January 2023. Letter A (Left) = January. Number 23 (Right) = 2023.",
+        finish: "Signature translucent Black Ice coating over durable brass case.",
+        artwork: "Laser-engraved silver geometric lines with vintage Art Deco typography.",
+        frontImg: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80",
+        stampImg: null
       },
       {
         id: "2",
-        name: "2020 Z2 Vision",
+        name: "2018 Golden Scroll COTY",
+        modelNumber: "29653",
         tier: "COTY",
-        year: "2020",
-        price: 85.00,
-        condition: "Loose/Fired",
-        img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80"
-      },
-      {
-        id: "3",
-        name: "Amalfi Coast Lemons",
-        tier: "VINTAGE",
-        year: "2023",
-        price: 38.00,
-        condition: "Mint in Box",
-        img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=300&q=80"
+        year: "2018",
+        price: 115.00,
+        condition: "Loose / Fired",
+        stampDetails: "Manufactured in February 2018 (B 18). Limited to 12,000 consecutively numbered units.",
+        finish: "Armor Gold Plate with gold-plated internal mechanism.",
+        artwork: "360-degree MultiCut deep-carve floral scrollwork with diagonal banding.",
+        frontImg: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80",
+        stampImg: null
       }
     ];
 
@@ -221,7 +293,9 @@
 
       grid.innerHTML = '';
       const filtered = collection.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(search) || item.year.includes(search);
+        const matchesSearch = item.name.toLowerCase().includes(search) || 
+                              (item.modelNumber && item.modelNumber.toLowerCase().includes(search)) ||
+                              (item.year && item.year.includes(search));
         const matchesTier = (filter === 'ALL') || (item.tier === filter);
         return matchesSearch && matchesTier;
       });
@@ -235,23 +309,58 @@
       filtered.forEach(item => {
         const isChecked = selectedIds.has(item.id);
         const card = document.createElement('div');
-        card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative group";
+        card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative cursor-pointer active:scale-95 transition-transform";
+        card.onclick = (e) => {
+          if (e.target.type !== 'checkbox') openDetailModal(item.id);
+        };
         card.innerHTML = `
           <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
             <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
-            <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover">
+            <img src="${item.frontImg}" alt="${item.name}" class="w-full h-full object-cover">
           </div>
           <div>
             <h3 class="text-[11px] font-bold text-gray-100 truncate">${item.name}</h3>
-            <p class="text-[9px] text-gray-400">${item.condition}</p>
-            <p class="text-xs font-extrabold text-emerald-400 mt-1">$${Number(item.price).toFixed(2)}</p>
+            <p class="text-[9px] text-amber-400/80">${item.modelNumber ? '#' + item.modelNumber : item.year}</p>
+            <p class="text-xs font-extrabold text-emerald-400 mt-0.5">$${Number(item.price).toFixed(2)}</p>
           </div>
         `;
         grid.appendChild(card);
       });
 
       updateBatchTray();
+    }
+
+    function openDetailModal(id) {
+      const item = collection.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('modalTitle').innerText = item.name;
+      document.getElementById('modalModelNum').innerText = item.modelNumber ? `Model #${item.modelNumber}` : (item.year || '');
+      document.getElementById('modalTierBadge').innerText = item.tier;
+      document.getElementById('modalPrice').innerText = `$${Number(item.price).toFixed(2)}`;
+      document.getElementById('modalCondition').innerText = item.condition || 'Loose / Fired';
+      document.getElementById('modalStampDetails').innerText = item.stampDetails || 'No stamp details recorded.';
+      document.getElementById('modalFinish').innerText = item.finish || 'Standard Zippo brass construction.';
+      document.getElementById('modalArtwork').innerText = item.artwork || 'Standard factory finish.';
+      document.getElementById('modalFrontImg').src = item.frontImg;
+
+      const stampImgEl = document.getElementById('modalStampImg');
+      const placeholder = document.getElementById('noStampPlaceholder');
+      if (item.stampImg) {
+        stampImgEl.src = item.stampImg;
+        stampImgEl.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        stampImgEl.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
     }
 
     function toggleSelect(id) {
@@ -297,7 +406,6 @@
       a.click();
     }
 
-    // Modal Handlers
     function openScanModal() { document.getElementById('scanModal').classList.remove('hidden'); }
     function closeScanModal() { document.getElementById('scanModal').classList.add('hidden'); }
     function toggleSettingsModal() { 
@@ -315,7 +423,6 @@
       }
     }
 
-    // Image compressor to prevent payload/timeout errors
     async function compressImage(file, maxDimension = 1024) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -350,7 +457,7 @@
       });
     }
 
-    // AI Vision Analyzer with automatic multi-model failover & retries
+    // Dual-Image AI Vision Analyzer
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
       if (!apiKey) {
@@ -360,6 +467,8 @@
       }
 
       const frontFile = document.getElementById('frontPhotoInput').files[0];
+      const stampFile = document.getElementById('stampPhotoInput').files[0];
+
       if (!frontFile) {
         alert("Please select at least the front photo of your Zippo.");
         return;
@@ -370,24 +479,34 @@
       runBtn.disabled = true;
 
       try {
-        const base64Data = await compressImage(frontFile);
+        const parts = [];
+        const frontBase64 = await compressImage(frontFile);
+        parts.push({ inline_data: { mime_type: 'image/jpeg', data: frontBase64 } });
 
-        const prompt = `You are a vintage and modern Zippo lighter collector expert. Analyze this lighter image and reply STRICTLY in raw JSON format with no markdown quotes, backticks, or explanation. Match these exact keys:
-        {
-          "name": "string (Model, subject or design name)",
-          "year": "string (Year or approximate decade)",
-          "tier": "COTY or ARMOR or VINTAGE or STANDARD",
-          "condition": "Loose/Fired or Mint in Box",
-          "price": number (estimated fair secondary market value in USD as a plain number)
-        }`;
+        if (stampFile) {
+          const stampBase64 = await compressImage(stampFile);
+          parts.push({ inline_data: { mime_type: 'image/jpeg', data: stampBase64 } });
+        }
 
-        // Candidate fallback models to try if the primary encounters high traffic
-        const candidateModels = [
-          'gemini-3.6-flash',
-          'gemini-2.5-flash',
-          'gemini-2.5-pro'
-        ];
+        const prompt = `You are a world-class Zippo lighter historian and authenticator.
+Analyze the provided image(s). Photo 1 is the front face artwork. If Photo 2 is present, it is the bottom stamp.
+Extract the detailed catalog and dating data. Respond STRICTLY in raw JSON format with no markdown, backticks, or explanation.
+Exact JSON structure:
+{
+  "name": "Full Official Model Name (e.g. Zippo Art Deco Design Black Ice Windproof Lighter)",
+  "modelNumber": "Official Zippo 5-digit catalog number if known, otherwise empty string",
+  "year": "Exact year manufactured (e.g. 2023)",
+  "tier": "COTY or ARMOR or VINTAGE or STANDARD",
+  "stampDetails": "Clear decoding of the stamp month letter (A=Jan..L=Dec) and year number (e.g. Manufactured in January 2023. Letter A represents January; 23 represents 2023; Bradford, PA Made in USA)",
+  "finish": "Detailed finish and casing description (e.g. Translucent Black Ice coating over durable brass case)",
+  "artwork": "Detailed description of artwork technique (e.g. Precisely laser-engraved silver geometric lines in Art Deco style)",
+  "condition": "Loose / Fired or Mint in Box",
+  "price": number (estimated fair secondary market value in USD as a plain number)
+}`;
 
+        parts.unshift({ text: prompt });
+
+        const candidateModels = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
         let success = false;
         let lastError = null;
 
@@ -399,32 +518,24 @@
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { text: prompt },
-                    { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
-                  ]
-                }],
-                generationConfig: {
-                  response_mime_type: "application/json"
-                }
+                contents: [{ parts }],
+                generationConfig: { response_mime_type: "application/json" }
               })
             });
 
             const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
 
-            if (data.error) {
-              throw new Error(data.error.message || `Error calling ${model}`);
-            }
-
-            const rawText = data.candidates[0].content.parts[0].text;
-            const parsed = JSON.parse(rawText);
+            const parsed = JSON.parse(data.candidates[0].content.parts[0].text);
 
             document.getElementById('formModel').value = parsed.name || "Custom Zippo";
-            document.getElementById('formYear').value = parsed.year || "Modern";
+            document.getElementById('formModelNum').value = parsed.modelNumber || "";
             document.getElementById('formTier').value = parsed.tier || "STANDARD";
-            document.getElementById('formCondition').value = parsed.condition || "Loose/Fired";
-            document.getElementById('formPrice').value = parsed.price || 40.00;
+            document.getElementById('formStampDetails').value = parsed.stampDetails || "";
+            document.getElementById('formFinish').value = parsed.finish || "";
+            document.getElementById('formArtwork').value = parsed.artwork || "";
+            document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
+            document.getElementById('formPrice').value = parsed.price || 35.00;
 
             success = true;
             break;
@@ -435,12 +546,10 @@
           }
         }
 
-        if (!success) {
-          throw lastError || new Error("All AI endpoints are temporarily busy. Please wait a moment and try again.");
-        }
+        if (!success) throw lastError || new Error("AI endpoints are temporarily busy. Please try again.");
 
       } catch (err) {
-        alert(`AI scan error: ${err.message || 'Check API key or try again in a few seconds'}`);
+        alert(`AI scan error: ${err.message || 'Check connection or key'}`);
       } finally {
         runBtn.innerText = "Identify with AI";
         runBtn.disabled = false;
@@ -449,22 +558,32 @@
 
     function saveLighterToVault() {
       const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
-      const year = document.getElementById('formYear').value.trim() || "Unknown";
+      const modelNumber = document.getElementById('formModelNum').value.trim();
       const tier = document.getElementById('formTier').value;
+      const stampDetails = document.getElementById('formStampDetails').value.trim();
+      const finish = document.getElementById('formFinish').value.trim();
+      const artwork = document.getElementById('formArtwork').value.trim();
       const condition = document.getElementById('formCondition').value;
       const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
 
       const frontFile = document.getElementById('frontPhotoInput').files[0];
-      const imgUrl = frontFile ? URL.createObjectURL(frontFile) : "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+      const stampFile = document.getElementById('stampPhotoInput').files[0];
+
+      const frontImg = frontFile ? URL.createObjectURL(frontFile) : "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+      const stampImg = stampFile ? URL.createObjectURL(stampFile) : null;
 
       collection.unshift({
         id: Date.now().toString(),
         name,
-        year,
+        modelNumber,
         tier,
+        stampDetails,
+        finish,
+        artwork,
         condition,
         price,
-        img: imgUrl
+        frontImg,
+        stampImg
       });
 
       saveState();
@@ -475,7 +594,6 @@
       alert("Annual Collectible of the Year (COTY) Drop Tracker:\n\n• Timing: Every February - April\n• Primary Channel: Zippo.com (Z-Connect members)\n• Secondary Allocation: Riley's 66 & Lucas Lighters\n• Target MSRP: $120 - $160");
     }
 
-    // Init on load
     renderCollection();
   </script>
 </body>
