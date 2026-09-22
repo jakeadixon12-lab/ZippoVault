@@ -350,7 +350,7 @@
       });
     }
 
-    // AI Vision Analyzer using gemini-3.6-flash
+    // AI Vision Analyzer with automatic multi-model failover & retries
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
       if (!apiKey) {
@@ -381,40 +381,66 @@
           "price": number (estimated fair secondary market value in USD as a plain number)
         }`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
-              ]
-            }],
-            generationConfig: {
-              response_mime_type: "application/json"
-            }
-          })
-        });
+        // Candidate fallback models to try if the primary encounters high traffic
+        const candidateModels = [
+          'gemini-3.6-flash',
+          'gemini-2.5-flash',
+          'gemini-2.5-pro'
+        ];
 
-        const data = await res.json();
-        
-        if (data.error) {
-          throw new Error(data.error.message || "API Error");
+        let success = false;
+        let lastError = null;
+
+        for (const model of candidateModels) {
+          try {
+            runBtn.innerText = `Analyzing (${model.replace('gemini-', '')})...`;
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: prompt },
+                    { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
+                  ]
+                }],
+                generationConfig: {
+                  response_mime_type: "application/json"
+                }
+              })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+              throw new Error(data.error.message || `Error calling ${model}`);
+            }
+
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = JSON.parse(rawText);
+
+            document.getElementById('formModel').value = parsed.name || "Custom Zippo";
+            document.getElementById('formYear').value = parsed.year || "Modern";
+            document.getElementById('formTier').value = parsed.tier || "STANDARD";
+            document.getElementById('formCondition').value = parsed.condition || "Loose/Fired";
+            document.getElementById('formPrice').value = parsed.price || 40.00;
+
+            success = true;
+            break;
+          } catch (err) {
+            console.warn(`Model ${model} failed:`, err);
+            lastError = err;
+            await new Promise(r => setTimeout(r, 1000));
+          }
         }
 
-        const rawText = data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(rawText);
-
-        document.getElementById('formModel').value = parsed.name || "Custom Zippo";
-        document.getElementById('formYear').value = parsed.year || "Modern";
-        document.getElementById('formTier').value = parsed.tier || "STANDARD";
-        document.getElementById('formCondition').value = parsed.condition || "Loose/Fired";
-        document.getElementById('formPrice').value = parsed.price || 40.00;
+        if (!success) {
+          throw lastError || new Error("All AI endpoints are temporarily busy. Please wait a moment and try again.");
+        }
 
       } catch (err) {
-        alert(`AI scan error: ${err.message || 'Check API key or image format'}`);
-        console.error(err);
+        alert(`AI scan error: ${err.message || 'Check API key or try again in a few seconds'}`);
       } finally {
         runBtn.innerText = "Identify with AI";
         runBtn.disabled = false;
