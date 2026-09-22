@@ -1059,12 +1059,17 @@ Respond strictly in raw JSON with no formatting or backticks:
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { response_mime_type: "application/json", thinking_config: { thinking_budget: 0 } }
+                generationConfig: { responseMimeType: "application/json" }
               })
             });
             const d = await res.json();
             if (d.error) throw new Error(d.error.message);
-            parsed = JSON.parse(d.candidates[0].content.parts[0].text);
+            if (!d.candidates || !d.candidates[0] || !d.candidates[0].content || !d.candidates[0].content.parts) {
+              throw new Error("No candidate returned from model.");
+            }
+            let rawText = d.candidates[0].content.parts[0].text.trim();
+            rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+            parsed = JSON.parse(rawText);
             break;
           } catch (e) {
             await new Promise(r => setTimeout(r, 200));
@@ -1109,6 +1114,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
+    // Community Grail Radar Matching Engine
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
       const badge = document.getElementById('watchlistCountBadge');
@@ -1290,7 +1296,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       filtered.forEach(item => {
         const card = document.createElement('div');
         card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative cursor-pointer active:scale-95 transition-transform";
-        const displayImg = item.frontImg || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+        const displayImg = item.frontImg || "[https://images.unsplash.com/photo-1542838132-92c53300491e?w=300](https://images.unsplash.com/photo-1542838132-92c53300491e?w=300)";
         const sparksCount = sparksMap[item.id] || 0;
 
         if (viewMode === 'VAULT') {
@@ -1362,114 +1368,6 @@ Respond strictly in raw JSON with no formatting or backticks:
       });
 
       if (viewMode === 'VAULT') updateBatchTray();
-    }
-
-    function openPublicPassport(userId) {
-      const profile = allPublicProfiles.find(p => p.id === userId);
-      if (!profile) return alert("Profile not found.");
-
-      const modal = document.getElementById('publicPassportModal');
-      const headerBox = document.getElementById('passportHeaderBox');
-      const showcaseGrid = document.getElementById('passportShowcaseGrid');
-      const friendBtn = document.getElementById('passportFriendBtn');
-      const vouchBtn = document.getElementById('passportVouchBtn');
-
-      const isMe = currentUser && currentUser.id === userId;
-      const isFriend = friendsList.some(f => (f.user_id === userId || f.friend_id === userId));
-
-      if (headerBox) {
-        headerBox.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0">
-              ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xl text-gray-500"></i>`}
-            </div>
-            <div class="overflow-hidden">
-              <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-                ${profile.username || 'Collector'}
-                <span class="text-[8px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">Verified</span>
-              </h3>
-              <p class="text-[11px] text-gray-400 truncate">${profile.bio || 'FlameVault lighter collector.'}</p>
-              <div class="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
-                <span><i class="fa-solid fa-location-dot text-amber-500"></i> ${profile.location || 'USA'}</span>
-                <span><i class="fa-solid fa-vault text-purple-400"></i> ${profile.vault_visibility}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      const userShowcase = allCommunityLighters.filter(l => l.userId === userId && l.inShowcase);
-      if (showcaseGrid) {
-        showcaseGrid.innerHTML = '';
-        if (userShowcase.length === 0) {
-          showcaseGrid.innerHTML = `<span class="col-span-3 text-xs text-gray-500 italic py-2">No showcase lighters pinned yet.</span>`;
-        } else {
-          userShowcase.forEach(l => {
-            const itemEl = document.createElement('div');
-            itemEl.className = "bg-[#161822] rounded-xl p-2 border border-white/10 text-center cursor-pointer active:scale-95 transition";
-            itemEl.onclick = () => { closePublicPassportModal(); openInspectionWindow(l.id, true); };
-            itemEl.innerHTML = `
-              <img src="${l.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
-              <h5 class="text-[10px] font-bold text-gray-200 truncate">${l.name}</h5>
-              <span class="text-[9px] font-extrabold text-amber-400">$${Number(l.price).toFixed(0)}</span>
-            `;
-            showcaseGrid.appendChild(itemEl);
-          });
-        }
-      }
-
-      if (friendBtn) {
-        friendBtn.onclick = () => sendFriendRequest(userId);
-        friendBtn.innerHTML = isFriend ? '<i class="fa-solid fa-check"></i> Friends' : '<i class="fa-solid fa-user-plus"></i> Add Friend';
-      }
-      if (vouchBtn) vouchBtn.onclick = () => vouchCollector(userId);
-
-      if (isMe) {
-        if (friendBtn) friendBtn.classList.add('hidden');
-        if (vouchBtn) vouchBtn.classList.add('hidden');
-      } else {
-        if (friendBtn) friendBtn.classList.remove('hidden');
-        if (vouchBtn) vouchBtn.classList.remove('hidden');
-      }
-
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closePublicPassportModal() { 
-      const el = document.getElementById('publicPassportModal');
-      if (el) el.classList.add('hidden'); 
-    }
-
-    async function sendFriendRequest(friendId) {
-      if (!currentUser) return toggleAuthModal();
-      const { error } = await supabaseClient.from('friendships').insert([{ user_id: currentUser.id, friend_id: friendId, status: 'ACCEPTED' }]);
-      if (error) alert("Friend relation exists or error: " + error.message);
-      else alert("Friend added to your circle!");
-      loadAppData();
-    }
-
-    async function vouchCollector(targetUserId) {
-      if (!currentUser) return toggleAuthModal();
-      const { error } = await supabaseClient.from('collector_vouches').insert([{ vouched_user_id: targetUserId, voucher_id: currentUser.id }]);
-      if (error) alert("You already vouched for this collector!");
-      else alert("Vouch submitted! You endorsed this collector's authenticity.");
-      loadAppData();
-    }
-
-    async function sparkLighter(lighterId) {
-      if (!currentUser) return toggleAuthModal();
-      const { error } = await supabaseClient.from('lighter_sparks').insert([{ lighter_id: lighterId, user_id: currentUser.id }]);
-      if (error) {
-        await supabaseClient.from('lighter_sparks').delete().match({ lighter_id: lighterId, user_id: currentUser.id });
-      }
-      loadAppData();
-    }
-
-    function copyPassportLink() {
-      const handle = (userProfile && userProfile.username) || 'collector';
-      const link = `${window.location.origin}${window.location.pathname}#@${handle}`;
-      navigator.clipboard.writeText(link);
-      alert(`Copied your FlameVault Passport link to clipboard:\n${link}`);
     }
 
     function openTradeProposal(targetItem) {
@@ -1826,6 +1724,10 @@ Respond strictly in raw JSON with no formatting or backticks:
             <textarea id="edit_stampDetails_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">${item.stampDetails || ''}</textarea>
           </div>
           <div>
+            <label class="block text-[9px] text-gray-400 uppercase">Market Analysis & Historical Notes</label>
+            <textarea id="edit_marketNotes_${winId}" rows="2" class="w-full bg-[#12131c] text-xs text-gray-300 p-1.5 rounded border border-white/10 mt-0.5">${item.marketNotes || ''}</textarea>
+          </div>
+          <div>
             <label class="block text-[9px] text-gray-400 uppercase">Finish & Metal</label>
             <input type="text" id="edit_finish_${winId}" value="${item.finish || ''}" class="w-full bg-[#12131c] text-xs text-white p-1.5 rounded border border-white/10 mt-0.5">
           </div>
@@ -1862,6 +1764,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       item.condition = document.getElementById(`edit_condition_${winId}`).value;
       item.price = parseFloat(document.getElementById(`edit_price_${winId}`).value) || item.price;
       item.stampDetails = document.getElementById(`edit_stampDetails_${winId}`).value.trim();
+      item.marketNotes = document.getElementById(`edit_marketNotes_${winId}`).value.trim();
       item.finish = document.getElementById(`edit_finish_${winId}`).value.trim();
       item.artwork = document.getElementById(`edit_artwork_${winId}`).value.trim();
 
@@ -1874,6 +1777,7 @@ Respond strictly in raw JSON with no formatting or backticks:
           condition: item.condition,
           price: item.price,
           stamp_details: item.stampDetails,
+          market_notes: item.marketNotes,
           finish: item.finish,
           artwork: item.artwork
         };
@@ -1972,17 +1876,22 @@ Respond in raw JSON:
 
       for (const model of ACTIVE_GEMINI_MODELS) {
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const res = await fetch(`[https://generativelanguage.googleapis.com/v1beta/models/$](https://generativelanguage.googleapis.com/v1beta/models/$){model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { response_mime_type: "application/json", thinking_config: { thinking_budget: 0 } }
+              generationConfig: { responseMimeType: "application/json" }
             })
           });
           const data = await res.json();
           if (data.error) throw new Error(data.error.message);
-          return JSON.parse(data.candidates[0].content.parts[0].text);
+          if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+            throw new Error("No response from model");
+          }
+          let rawText = data.candidates[0].content.parts[0].text.trim();
+          rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+          return JSON.parse(rawText);
         } catch (err) {
           await new Promise(r => setTimeout(r, 200));
         }
@@ -2028,9 +1937,7 @@ Respond in raw JSON:
 
       const batchBtn = document.getElementById('batchAppraiseBtn');
       const originalHtml = batchBtn ? batchBtn.innerHTML : '';
-      if (batchBtn) {
-        batchBtn.disabled = true;
-      }
+      if (batchBtn) batchBtn.disabled = true;
 
       const ids = Array.from(selectedIds);
       let successCount = 0;
@@ -2356,57 +2263,101 @@ Respond in raw JSON:
       return supabaseClient.storage.from('zippo-images').getPublicUrl(safe).data.publicUrl;
     }
 
+    // Resilient, Bulletproof AI Scanner Function
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
-      if (!apiKey) return alert("Configure Gemini Key in Settings.");
+      if (!apiKey) return alert("Configure your Gemini API Key in Settings first.");
+
       const frontFile = document.getElementById('frontPhotoInput').files[0];
       const stampFile = document.getElementById('stampPhotoInput').files[0];
-      if (!frontFile && !stampFile) return alert("Select at least 1 image.");
+      if (!frontFile && !stampFile) return alert("Please select at least one photo (front face or bottom stamp).");
 
       const runBtn = document.getElementById('runAiBtn'); 
       if (runBtn) runBtn.disabled = true;
+
       try {
-        const parts = [{ text: `You are a certified Zippo lighter appraiser.
-Analyze the provided images. Return raw JSON:
+        const parts = [];
+        const systemInstruction = `You are a certified Zippo lighter appraiser and historian.
+Analyze the provided lighter image(s). Identify model name, catalog SKU number, limited edition / make numbering (e.g. 05761/20020), bottom stamp date code, finish, and condition.
+
+Return raw JSON strictly matching this schema:
 {
   "name": "Full Official Model Name",
   "modelNumber": "5-digit catalog number or empty string",
   "editionNumber": "Limited edition numbering if visible (e.g. 05761/20020), otherwise empty string",
-  "year": "Exact year (e.g. 2023)",
+  "year": "Exact year (e.g. 2020)",
   "tier": "COTY or ARMOR or VINTAGE or STANDARD",
-  "stampDetails": "Full explanation of stamp",
+  "stampDetails": "Full explanation of stamp (month letter, year, Bradford PA)",
   "finish": "Case finish and metal",
-  "artwork": "Artwork details",
+  "artwork": "Artwork and engraving details",
   "condition": "Loose / Fired or Mint in Box",
-  "price": number,
-  "marketNotes": "Summary of eBay comp pricing"
-}` }];
+  "price": 35.00,
+  "marketNotes": "Summary of secondary market comps"
+}`;
+        parts.push({ text: systemInstruction });
+
         if (frontFile) {
-          const b64 = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result.split(',')[1]); rd.readAsDataURL(frontFile); });
-          parts.push({ text: "PHOTO 1 (Front):" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
+          const frontBlob = await fileToCompressedBlob(frontFile, 850);
+          const frontBase64 = await new Promise((res, rej) => {
+            const rd = new FileReader();
+            rd.onloadend = () => res(rd.result.split(',')[1]);
+            rd.onerror = rej;
+            rd.readAsDataURL(frontBlob);
+          });
+          parts.push({ text: "PHOTO 1 (Front Artwork / Face):" });
+          parts.push({ inlineData: { mimeType: 'image/jpeg', data: frontBase64 } });
         }
+
         if (stampFile) {
-          const b64 = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result.split(',')[1]); rd.readAsDataURL(stampFile); });
-          parts.push({ text: "PHOTO 2 (Stamp):" }, { inline_data: { mime_type: 'image/jpeg', data: b64 } });
+          const stampBlob = await fileToCompressedBlob(stampFile, 850);
+          const stampBase64 = await new Promise((res, rej) => {
+            const rd = new FileReader();
+            rd.onloadend = () => res(rd.result.split(',')[1]);
+            rd.onerror = rej;
+            rd.readAsDataURL(stampBlob);
+          });
+          parts.push({ text: "PHOTO 2 (Bottom Stamp Macro):" });
+          parts.push({ inlineData: { mimeType: 'image/jpeg', data: stampBase64 } });
         }
 
         let parsed = null;
-        for (const m of ACTIVE_GEMINI_MODELS) {
+        let lastError = null;
+
+        for (const model of ACTIVE_GEMINI_MODELS) {
           try {
-            if (runBtn) runBtn.innerText = `Scanning (${m.replace('gemini-', '')})...`;
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
+            if (runBtn) runBtn.innerText = `Scanning (${model.replace('gemini-', '')})...`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts }], generationConfig: { response_mime_type: "application/json", thinking_budget: 0 } })
+              body: JSON.stringify({
+                contents: [{ parts }],
+                generationConfig: {
+                  responseMimeType: "application/json"
+                }
+              })
             });
+
             const d = await res.json();
             if (d.error) throw new Error(d.error.message);
-            parsed = JSON.parse(d.candidates[0].content.parts[0].text);
+
+            if (!d.candidates || !d.candidates[0] || !d.candidates[0].content || !d.candidates[0].content.parts) {
+              throw new Error("No candidate returned from model.");
+            }
+
+            let rawText = d.candidates[0].content.parts[0].text.trim();
+            rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+
+            parsed = JSON.parse(rawText);
             break;
-          } catch (e) { await new Promise(r => setTimeout(r, 200)); }
+          } catch (e) {
+            console.warn(`Model ${model} failed, trying fallback:`, e);
+            lastError = e;
+            await new Promise(r => setTimeout(r, 200));
+          }
         }
 
-        if (!parsed) throw new Error("Could not parse image data.");
+        if (!parsed) throw lastError || new Error("Could not parse image data.");
+
         document.getElementById('formModel').value = parsed.name || "Custom Zippo";
         document.getElementById('formModelNum').value = parsed.modelNumber || "";
         document.getElementById('formEditionNum').value = parsed.editionNumber || "";
@@ -2417,8 +2368,10 @@ Analyze the provided images. Return raw JSON:
         document.getElementById('formMarketNotes').value = parsed.marketNotes || "";
         document.getElementById('formCondition').value = parsed.condition || "Loose / Fired";
         document.getElementById('formPrice').value = parsed.price || 35.00;
-      } catch (err) { alert(`Scan error: ${err.message}`); }
-      finally { 
+
+      } catch (err) {
+        alert(`Scan error: ${err.message}`);
+      } finally { 
         if (runBtn) {
           runBtn.innerText = "Identify with AI"; 
           runBtn.disabled = false; 
@@ -2446,7 +2399,7 @@ Analyze the provided images. Return raw JSON:
         const frontFile = document.getElementById('frontPhotoInput').files[0];
         const stampFile = document.getElementById('stampPhotoInput').files[0];
 
-        let frontImgUrl = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+        let frontImgUrl = "[https://images.unsplash.com/photo-1542838132-92c53300491e?w=300](https://images.unsplash.com/photo-1542838132-92c53300491e?w=300)";
         let stampImgUrl = null;
 
         if (supabaseClient && currentUser) {
@@ -2473,12 +2426,10 @@ Analyze the provided images. Return raw JSON:
     }
 
     function openCOTYModal() {
-      // Re-route to collecting guide or open archive modal
       switchMainView('COLLECTING');
       switchCollectingSubTab('WATCHLIST');
     }
 
-    // Initialize application safely
     window.addEventListener('DOMContentLoaded', () => {
       initSupabase();
     });
