@@ -122,7 +122,7 @@
     </button>
   </nav>
 
-  <!-- Auth Modal (Sign In / Sign Up) -->
+  <!-- Auth Modal (Sign In / Sign Up & OAuth) -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-5 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -143,8 +143,26 @@
         </button>
       </div>
 
-      <!-- Guest View (Sign In / Sign Up Form) -->
+      <!-- Guest View (Social + Email Form) -->
       <div id="authLoggedOutView" class="space-y-3">
+        <!-- Express Social Sign-Ins -->
+        <div class="space-y-2">
+          <button onclick="signInWithProvider('google')" class="w-full py-2 bg-white hover:bg-gray-100 text-gray-900 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 shadow transition">
+            <i class="fa-brands fa-google text-red-500"></i>
+            <span>Continue with Google</span>
+          </button>
+          <button onclick="signInWithProvider('apple')" class="w-full py-2 bg-black hover:bg-gray-900 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 border border-white/15 transition">
+            <i class="fa-brands fa-apple text-sm"></i>
+            <span>Continue with Apple</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 my-2">
+          <div class="flex-1 h-px bg-white/10"></div>
+          <span class="text-[10px] text-gray-500 uppercase">Or with email</span>
+          <div class="flex-1 h-px bg-white/10"></div>
+        </div>
+
         <div>
           <label class="block text-xs text-gray-400 mb-1">Email</label>
           <input type="email" id="authEmailInput" placeholder="collector@example.com" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
@@ -283,7 +301,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal (Developer / Override) -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
@@ -307,6 +325,12 @@
   </div>
 
   <script>
+    // ==========================================
+    // BAKED-IN PRODUCTION CREDENTIALS
+    // ==========================================
+    const DEFAULT_SUPABASE_URL = "https://qxwdvjwdelnariorfzkx.supabase.co";
+    const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4d2R2andkZWxuYXJpb3Jmemt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzM1MDQsImV4cCI6MjEwNTYwOTUwNH0.Ix3HmMICSOPTUv7n0o5vUMSMJ5liFvl8KvGiSf68tyU";
+
     let supabaseClient = null;
     let currentUser = null;
     let collection = [];
@@ -353,8 +377,8 @@
     }
 
     function initSupabase() {
-      const rawUrl = localStorage.getItem('sb_url') || '';
-      const key = (localStorage.getItem('sb_key') || '').trim();
+      const rawUrl = localStorage.getItem('sb_url') || DEFAULT_SUPABASE_URL;
+      const key = (localStorage.getItem('sb_key') || DEFAULT_SUPABASE_ANON_KEY).trim();
 
       const url = cleanSupabaseUrl(rawUrl);
 
@@ -362,14 +386,12 @@
         try {
           supabaseClient = window.supabase.createClient(url, key);
           
-          // Listen to live auth changes
           supabaseClient.auth.onAuthStateChange((event, session) => {
             currentUser = session ? session.user : null;
             updateAuthUI();
             loadFromSupabase();
           });
 
-          // Check current active session on launch
           supabaseClient.auth.getSession().then(({ data: { session } }) => {
             currentUser = session ? session.user : null;
             updateAuthUI();
@@ -408,11 +430,23 @@
       document.getElementById('authModal').classList.toggle('hidden');
     }
 
-    async function handleSignIn() {
-      if (!supabaseClient) {
-        alert("Please configure your Supabase URL & Anon Key in Settings first.");
-        return;
+    async function signInWithProvider(providerName) {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+          provider: providerName,
+          options: {
+            redirectTo: window.location.href.split('#')[0]
+          }
+        });
+        if (error) throw error;
+      } catch (err) {
+        alert(`Social login error: ${err.message}`);
       }
+    }
+
+    async function handleSignIn() {
+      if (!supabaseClient) return;
       const email = document.getElementById('authEmailInput').value.trim();
       const password = document.getElementById('authPasswordInput').value.trim();
       if (!email || !password) {
@@ -436,10 +470,7 @@
     }
 
     async function handleSignUp() {
-      if (!supabaseClient) {
-        alert("Please configure your Supabase URL & Anon Key in Settings first.");
-        return;
-      }
+      if (!supabaseClient) return;
       const email = document.getElementById('authEmailInput').value.trim();
       const password = document.getElementById('authPasswordInput').value.trim();
       if (!email || !password) {
@@ -481,7 +512,6 @@
 
       let query = supabaseClient.from('lighters').select('*').order('created_at', { ascending: false });
 
-      // If signed in, only load your own collection
       if (currentUser) {
         query = query.eq('user_id', currentUser.id);
       }
@@ -1308,8 +1338,8 @@ Respond STRICTLY in raw JSON format with no markdown, backticks, or other text:
     
     function toggleSettingsModal() { 
       document.getElementById('settingsModal').classList.toggle('hidden');
-      document.getElementById('sbUrlInput').value = localStorage.getItem('sb_url') || '';
-      document.getElementById('sbKeyInput').value = localStorage.getItem('sb_key') || '';
+      document.getElementById('sbUrlInput').value = localStorage.getItem('sb_url') || DEFAULT_SUPABASE_URL;
+      document.getElementById('sbKeyInput').value = localStorage.getItem('sb_key') || DEFAULT_SUPABASE_ANON_KEY;
       document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key_vault') || '';
     }
 
