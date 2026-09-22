@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ZippoVault</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #0d0e15; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .card-surface { background-color: #191b26; border: 1px solid rgba(255, 255, 255, 0.08); }
+    .bottom-nav { background-color: #12131c; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="pb-32 select-none">
+
+  <!-- Top App Bar -->
+  <header class="sticky top-0 z-30 bg-[#0d0e15]/95 backdrop-blur px-4 pt-4 pb-2 border-b border-white/5">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-fire text-amber-500 text-lg"></i>
+        <h1 class="text-xl font-bold tracking-tight text-white">ZippoVault</h1>
+      </div>
+      <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white p-2">
+        <i class="fa-solid fa-gear text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="flex items-center gap-2">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"></i>
+        <input id="searchInput" oninput="renderCollection()" type="text" placeholder="Search collection..."
+               class="w-full bg-[#191b26] text-sm text-gray-200 pl-8 pr-3 py-1.5 rounded-full border border-white/10 focus:outline-none focus:border-amber-500">
+      </div>
+      <select id="filterTier" onchange="renderCollection()" class="bg-[#191b26] text-xs text-gray-300 py-2 px-2.5 rounded-full border border-white/10">
+        <option value="ALL">All Lighters</option>
+        <option value="COTY">COTY</option>
+        <option value="ARMOR">Armor</option>
+        <option value="VINTAGE">Vintage</option>
+        <option value="STANDARD">Standard</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Main Vault Grid -->
+  <main class="p-3">
+    <div id="vaultGrid" class="grid grid-cols-3 gap-2.5">
+      <!-- Injected by JavaScript -->
+    </div>
+    <div id="emptyState" class="hidden text-center py-16 text-gray-500">
+      <i class="fa-solid fa-box-open text-4xl mb-3"></i>
+      <p class="text-sm">No Zippos in vault. Tap Scan to add one.</p>
+    </div>
+  </main>
+
+  <!-- Sticky Batch Action Tray -->
+  <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20 transition-transform">
+    <div class="flex items-center gap-2">
+      <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500">
+      <label for="selectAllCheckbox" id="selectCount" class="text-xs text-gray-300">Select All (0)</label>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="selectedTotal" class="text-xs font-semibold text-emerald-400">Total: $0.00</span>
+      <button onclick="deleteSelected()" class="bg-red-500/20 text-red-400 text-xs px-3 py-1.5 rounded-md hover:bg-red-500/30">Delete</button>
+      <button onclick="exportJSON()" class="bg-[#6366F1] text-white text-xs px-3 py-1.5 rounded-md font-medium hover:bg-indigo-600">Export</button>
+    </div>
+  </aside>
+
+  <!-- Fixed Bottom Navigation -->
+  <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
+    <button class="flex flex-col items-center text-gray-400 hover:text-white">
+      <i class="fa-solid fa-chart-pie text-sm"></i>
+      <span class="text-[10px] mt-1">Stats</span>
+    </button>
+    <button class="flex flex-col items-center text-amber-500 font-semibold">
+      <i class="fa-solid fa-boxes-stacked text-sm"></i>
+      <span class="text-[10px] mt-1">Vault</span>
+    </button>
+    <button onclick="openScanModal()" class="relative -top-3 bg-amber-500 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-105 active:scale-95 transition">
+      <i class="fa-solid fa-camera text-lg"></i>
+    </button>
+    <button onclick="openCOTYGuide()" class="flex flex-col items-center text-gray-400 hover:text-white">
+      <i class="fa-solid fa-bell text-sm"></i>
+      <span class="text-[10px] mt-1">COTY Drops</span>
+    </button>
+    <button onclick="toggleSettingsModal()" class="flex flex-col items-center text-gray-400 hover:text-white">
+      <i class="fa-solid fa-sliders text-sm"></i>
+      <span class="text-[10px] mt-1">Config</span>
+    </button>
+  </nav>
+
+  <!-- AI Scanner / Add Modal -->
+  <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> AI Scan & Add Zippo
+        </h2>
+        <button onclick="closeScanModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="grid grid-cols-2 gap-2 my-4">
+        <div>
+          <label class="block text-[11px] text-gray-400 mb-1">1. Lighter Front Face</label>
+          <input type="file" id="frontPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
+        </div>
+        <div>
+          <label class="block text-[11px] text-gray-400 mb-1">2. Bottom Stamp (Macro)</label>
+          <input type="file" id="stampPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
+        </div>
+      </div>
+
+      <button id="runAiBtn" onclick="runAiIdentification()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-semibold rounded-lg text-xs flex items-center justify-center gap-2 shadow-md">
+        <span>Identify with AI</span>
+      </button>
+
+      <!-- Extracted Fields Review Form -->
+      <div class="mt-4 space-y-3 pt-3 border-t border-white/10">
+        <div>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Model / Name</label>
+          <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Year / Stamp</label>
+            <input type="text" id="formYear" placeholder="e.g. 2018 (B 18)" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Category Tier</label>
+            <select id="formTier" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+              <option value="COTY">COTY</option>
+              <option value="ARMOR">Armor</option>
+              <option value="VINTAGE">Vintage</option>
+              <option value="STANDARD">Standard</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Condition</label>
+            <select id="formCondition" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+              <option value="Loose/Fired">Loose / Fired</option>
+              <option value="Mint in Box">Mint in Box (Unfired)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Est. Value ($)</label>
+            <input type="number" id="formPrice" class="w-full bg-[#12131c] text-xs text-emerald-400 font-bold p-2 rounded border border-white/10 mt-1">
+          </div>
+        </div>
+        <button onclick="saveLighterToVault()" class="w-full py-2.5 bg-emerald-500 text-black font-bold text-xs rounded-lg mt-2">
+          Add to Vault
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (API Key & Storage) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <h3 class="text-sm font-bold text-white">App Settings</h3>
+        <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Gemini Vision API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
+        <p class="text-[10px] text-gray-500 mt-1">Stored locally in your browser. Get a key at Google AI Studio.</p>
+      </div>
+      <button onclick="saveApiKey()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Key</button>
+    </div>
+  </div>
+
+  <script>
+    // Initial Starter Data (matching your collection)
+    const defaultData = [
+      {
+        id: "1",
+        name: "2018 Golden Scroll",
+        tier: "COTY",
+        year: "2018",
+        price: 115.00,
+        condition: "Loose/Fired",
+        img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: "2",
+        name: "2020 Z2 Vision",
+        tier: "COTY",
+        year: "2020",
+        price: 85.00,
+        condition: "Loose/Fired",
+        img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: "3",
+        name: "Amalfi Coast Lemons",
+        tier: "VINTAGE",
+        year: "2023",
+        price: 38.00,
+        condition: "Mint in Box",
+        img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=300&q=80"
+      }
+    ];
+
+    let collection = JSON.parse(localStorage.getItem('zippo_vault')) || defaultData;
+    let selectedIds = new Set();
+
+    function saveState() {
+      localStorage.setItem('zippo_vault', JSON.stringify(collection));
+      renderCollection();
+    }
+
+    function renderCollection() {
+      const grid = document.getElementById('vaultGrid');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filter = document.getElementById('filterTier').value;
+
+      grid.innerHTML = '';
+      const filtered = collection.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(search) || item.year.includes(search);
+        const matchesTier = (filter === 'ALL') || (item.tier === filter);
+        return matchesSearch && matchesTier;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('emptyState').classList.remove('hidden');
+      } else {
+        document.getElementById('emptyState').classList.add('hidden');
+      }
+
+      filtered.forEach(item => {
+        const isChecked = selectedIds.has(item.id);
+        const card = document.createElement('div');
+        card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative group";
+        card.innerHTML = `
+          <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
+            <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
+            <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <h3 class="text-[11px] font-bold text-gray-100 truncate">${item.name}</h3>
+            <p class="text-[9px] text-gray-400">${item.condition}</p>
+            <p class="text-xs font-extrabold text-emerald-400 mt-1">$${Number(item.price).toFixed(2)}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      updateBatchTray();
+    }
+
+    function toggleSelect(id) {
+      if (selectedIds.has(id)) selectedIds.delete(id);
+      else selectedIds.add(id);
+      updateBatchTray();
+    }
+
+    function toggleSelectAll() {
+      const allCheckbox = document.getElementById('selectAllCheckbox');
+      if (allCheckbox.checked) {
+        collection.forEach(item => selectedIds.add(item.id));
+      } else {
+        selectedIds.clear();
+      }
+      renderCollection();
+    }
+
+    function updateBatchTray() {
+      document.getElementById('selectCount').innerText = `Select All (${selectedIds.size})`;
+      const total = Array.from(selectedIds).reduce((sum, id) => {
+        const found = collection.find(i => i.id === id);
+        return sum + (found ? Number(found.price) : 0);
+      }, 0);
+      document.getElementById('selectedTotal').innerText = `Total: $${total.toFixed(2)}`;
+    }
+
+    function deleteSelected() {
+      if (selectedIds.size === 0) return;
+      if (confirm(`Remove ${selectedIds.size} lighter(s) from vault?`)) {
+        collection = collection.filter(item => !selectedIds.has(item.id));
+        selectedIds.clear();
+        saveState();
+      }
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zippo_vault_export_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    // Modal Handlers
+    function openScanModal() { document.getElementById('scanModal').classList.remove('hidden'); }
+    function closeScanModal() { document.getElementById('scanModal').classList.remove('hidden'); document.getElementById('scanModal').classList.add('hidden'); }
+    function toggleSettingsModal() { document.getElementById('settingsModal').classList.toggle('hidden'); }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (key) {
+        localStorage.setItem('gemini_api_key', key);
+        alert('API Key Saved!');
+        toggleSettingsModal();
+      }
+    }
+
+    // AI Vision Analyzer
+    async function runAiIdentification() {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        alert("Please set your Gemini API key in Settings (top right gear icon) first.");
+        toggleSettingsModal();
+        return;
+      }
+
+      const frontFile = document.getElementById('frontPhotoInput').files[0];
+      if (!frontFile) {
+        alert("Please select at least the front photo of your Zippo.");
+        return;
+      }
+
+      const runBtn = document.getElementById('runAiBtn');
+      runBtn.innerText = "Analyzing with AI...";
+      runBtn.disabled = true;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result.split(',')[1];
+        const prompt = `You are a Zippo collector expert. Analyze this lighter image and reply STRICTLY in raw JSON with these exact keys:
+        {
+          "name": "string (Model or design name)",
+          "year": "string (Year or decade)",
+          "tier": "COTY or ARMOR or VINTAGE or STANDARD",
+          "condition": "Loose/Fired or Mint in Box",
+          "price": number (estimated fair market value in USD)
+        }`;
+
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: frontFile.type, data: base64Data } }
+                ]
+              }]
+            })
+          });
+
+          const data = await res.json();
+          const rawText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+          const parsed = JSON.parse(rawText);
+
+          document.getElementById('formModel').value = parsed.name || "Custom Zippo";
+          document.getElementById('formYear').value = parsed.year || "Modern";
+          document.getElementById('formTier').value = parsed.tier || "STANDARD";
+          document.getElementById('formCondition').value = parsed.condition || "Loose/Fired";
+          document.getElementById('formPrice').value = parsed.price || 40.00;
+        } catch (err) {
+          alert("AI identification failed. You can manually enter details below.");
+          console.error(err);
+        } finally {
+          runBtn.innerText = "Identify with AI";
+          runBtn.disabled = false;
+        }
+      };
+      reader.readAsDataURL(frontFile);
+    }
+
+    function saveLighterToVault() {
+      const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
+      const year = document.getElementById('formYear').value.trim() || "Unknown";
+      const tier = document.getElementById('formTier').value;
+      const condition = document.getElementById('formCondition').value;
+      const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
+
+      const frontFile = document.getElementById('frontPhotoInput').files[0];
+      const imgUrl = frontFile ? URL.createObjectURL(frontFile) : "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+
+      collection.unshift({
+        id: Date.now().toString(),
+        name,
+        year,
+        tier,
+        condition,
+        price,
+        img: imgUrl
+      });
+
+      saveState();
+      closeScanModal();
+    }
+
+    function openCOTYGuide() {
+      alert("Annual Collectible of the Year (COTY) Drop Tracker:\n\n• Timing: Every February - April\n• Primary Channel: Zippo.com (Z-Connect members)\n• Secondary Allocation: Riley's 66 & Lucas Lighters\n• Target MSRP: $120 - $160");
+    }
+
+    // Init on load
+    renderCollection();
+  </script>
+</body>
+</html>
