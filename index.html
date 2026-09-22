@@ -356,7 +356,7 @@
     </div>
   </div>
 
-  <!-- Community Public Passport Modal -->
+  <!-- Community Public Passport & Full Vault Modal -->
   <div id="publicPassportModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-y-auto p-4 border border-white/10 flex flex-col space-y-3">
       <div class="flex items-center justify-between pb-2 border-b border-white/10">
@@ -366,12 +366,26 @@
         <button onclick="closePublicPassportModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div id="passportHeaderBox" class="bg-[#12131c] rounded-xl p-3 border border-white/5 space-y-2"></div>
+      
+      <!-- Showcase Shelf -->
       <div>
         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <i class="fa-solid fa-crown text-amber-400"></i> Featured Showcase
         </h4>
         <div id="passportShowcaseGrid" class="grid grid-cols-3 gap-2"></div>
       </div>
+
+      <!-- Public Vault Section -->
+      <div class="pt-2 border-t border-white/10">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold text-gray-200 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-boxes-stacked text-purple-400"></i> Collector's Vault Inventory
+          </h4>
+          <span id="passportVaultCountBadge" class="text-[10px] text-gray-400 font-mono">0 Items</span>
+        </div>
+        <div id="passportFullVaultGrid" class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1"></div>
+      </div>
+
       <div class="pt-2 border-t border-white/10 flex gap-2">
         <button id="passportFriendBtn" class="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow">
           <i class="fa-solid fa-user-plus"></i> Add Friend
@@ -644,6 +658,12 @@
       'gemini-3.1-pro-preview'
     ];
 
+    // Aliases to bridge SKU variations across Zippo catalogs
+    const KNOWN_SKU_ALIASES = {
+      '49119': '49272',
+      '49272': '49119'
+    };
+
     function initSupabase() {
       try {
         supabaseClient = window.supabase.createClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY);
@@ -753,7 +773,6 @@
       if (!supabaseClient) return;
 
       try {
-        // 1. Fetch Master Reference Catalog
         const { data: refData } = await supabaseClient.from('reference_lighters').select('*').order('created_at', { ascending: false });
         if (refData) {
           referenceCatalog = refData;
@@ -787,10 +806,10 @@
           myVaultCollection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
         }
 
-        // Fetch Global Market & Community Lighters
         const { data: marketData } = await supabaseClient.from('lighters').select('*').eq('is_listed', true).order('created_at', { ascending: false });
         if (marketData) publicMarketCollection = mapRows(marketData);
 
+        // Fetch all community lighters for radar cross-reference
         const { data: allLighters } = await supabaseClient.from('lighters').select('*');
         if (allLighters) allCommunityLighters = mapRows(allLighters);
 
@@ -1114,7 +1133,7 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
     }
 
-    // Community Grail Radar Matching Engine
+    // Community Grail Radar Matching Engine with Robust Normalization
     function renderWatchlist() {
       const container = document.getElementById('watchlistContainer');
       const badge = document.getElementById('watchlistCountBadge');
@@ -1128,22 +1147,37 @@ Respond strictly in raw JSON with no formatting or backticks:
       }
 
       userWatchlist.forEach(w => {
-        const titleTokens = (w.lighter_title || '').toLowerCase().split(/\s+/).filter(t => t.length > 2);
-        const skuToken = (w.model_sku || '').toLowerCase().trim();
+        const titleRaw = (w.lighter_title || '').toLowerCase();
+        const skuRaw = (w.model_sku || '').toLowerCase().trim();
+        const aliasSku = KNOWN_SKU_ALIASES[skuRaw] || '';
+
+        // Extract 4-digit year if present (e.g. "2020", "2018")
+        const yearMatch = titleRaw.match(/\b(19\d{2}|20\d{2})\b/);
+        const targetYear = yearMatch ? yearMatch[1] : '';
 
         const matches = allCommunityLighters.filter(l => {
           if (currentUser && l.userId === currentUser.id) return false;
 
           const lSku = (l.modelNumber || '').toLowerCase().trim();
           const lName = (l.name || '').toLowerCase();
+          const lYear = (l.year || '').toLowerCase();
 
-          if (skuToken && lSku && (skuToken === lSku || lSku.includes(skuToken))) return true;
-
-          if (titleTokens.length > 0) {
-            const matchesAllTokens = titleTokens.some(tok => lName.includes(tok));
-            if (matchesAllTokens && (l.year && w.lighter_title.includes(l.year))) return true;
-            if (lName.includes((w.lighter_title || '').toLowerCase())) return true;
+          // 1. Direct SKU or Alias SKU Match
+          if (skuRaw && lSku) {
+            if (skuRaw === lSku || lSku.includes(skuRaw)) return true;
+            if (aliasSku && (aliasSku === lSku || lSku.includes(aliasSku))) return true;
           }
+
+          // 2. Year + COTY / Collectible Matching (e.g. "2020" + "COTY" matches "Z2 Vision" 2020)
+          if (targetYear && (lYear === targetYear || lName.includes(targetYear))) {
+            const isTargetCOTY = titleRaw.includes('coty') || titleRaw.includes('collectible') || titleRaw.includes('vision');
+            const isLighterCOTY = l.tier === 'COTY' || lName.includes('coty') || lName.includes('collectible');
+            if (isTargetCOTY && isLighterCOTY) return true;
+          }
+
+          // 3. Substring Name Matching
+          if (titleRaw.length > 3 && lName.includes(titleRaw)) return true;
+          if (lName.length > 3 && titleRaw.includes(lName)) return true;
 
           return false;
         });
@@ -1241,7 +1275,7 @@ Respond strictly in raw JSON with no formatting or backticks:
                   <p class="text-[10px] text-gray-400">${friendVaultItems.length} lighters in vault</p>
                 </div>
               </div>
-              <button onclick="closeFriendsModal(); openPublicPassport('${friendUserId}')" class="px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs font-bold rounded-lg border border-blue-500/30 flex items-center gap-1">
+              <button onclick="closeFriendsModal(); openPublicPassport('${friendUserId}')" class="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-lg shadow flex items-center gap-1">
                 <span>View Vault</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
               </button>
             `;
@@ -1368,6 +1402,159 @@ Respond strictly in raw JSON with no formatting or backticks:
       });
 
       if (viewMode === 'VAULT') updateBatchTray();
+    }
+
+    // Community Public Passport & Full Vault Inventory Viewer
+    function openPublicPassport(userId) {
+      const profile = allPublicProfiles.find(p => p.id === userId);
+      if (!profile) return alert("Profile not found.");
+
+      const modal = document.getElementById('publicPassportModal');
+      const headerBox = document.getElementById('passportHeaderBox');
+      const showcaseGrid = document.getElementById('passportShowcaseGrid');
+      const fullVaultGrid = document.getElementById('passportFullVaultGrid');
+      const vaultCountBadge = document.getElementById('passportVaultCountBadge');
+      const friendBtn = document.getElementById('passportFriendBtn');
+      const vouchBtn = document.getElementById('passportVouchBtn');
+
+      const isMe = currentUser && currentUser.id === userId;
+      const isFriend = friendsList.some(f => (f.user_id === userId || f.friend_id === userId));
+
+      // Check visibility permission
+      const visibility = profile.vault_visibility || 'EVERYONE';
+      const isVaultAccessible = (visibility === 'EVERYONE') || (visibility === 'FRIENDS' && isFriend) || isMe;
+
+      if (headerBox) {
+        headerBox.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0">
+              ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xl text-gray-500"></i>`}
+            </div>
+            <div class="overflow-hidden">
+              <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                ${profile.username || 'Collector'}
+                <span class="text-[8px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">Verified</span>
+              </h3>
+              <p class="text-[11px] text-gray-400 truncate">${profile.bio || 'FlameVault lighter collector.'}</p>
+              <div class="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
+                <span><i class="fa-solid fa-location-dot text-amber-500"></i> ${profile.location || 'USA'}</span>
+                <span><i class="fa-solid fa-shield-halved text-purple-400"></i> ${visibility}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 1. Render Featured Showcase
+      const userShowcase = allCommunityLighters.filter(l => l.userId === userId && l.inShowcase);
+      if (showcaseGrid) {
+        showcaseGrid.innerHTML = '';
+        if (userShowcase.length === 0) {
+          showcaseGrid.innerHTML = `<span class="col-span-3 text-xs text-gray-500 italic py-2">No showcase lighters pinned yet.</span>`;
+        } else {
+          userShowcase.forEach(l => {
+            const itemEl = document.createElement('div');
+            itemEl.className = "bg-[#161822] rounded-xl p-2 border border-white/10 text-center cursor-pointer active:scale-95 transition hover:border-amber-500/40";
+            itemEl.onclick = () => { closePublicPassportModal(); openInspectionWindow(l.id, true); };
+            itemEl.innerHTML = `
+              <img src="${l.frontImg}" class="w-full aspect-square object-cover rounded-lg mb-1 bg-black/40">
+              <h5 class="text-[10px] font-bold text-gray-200 truncate">${l.name}</h5>
+              <span class="text-[9px] font-extrabold text-amber-400">$${Number(l.price).toFixed(0)}</span>
+            `;
+            showcaseGrid.appendChild(itemEl);
+          });
+        }
+      }
+
+      // 2. Render Full Accessible Vault Inventory
+      const userFullVault = allCommunityLighters.filter(l => l.userId === userId);
+      if (vaultCountBadge) vaultCountBadge.innerText = `${userFullVault.length} Items`;
+
+      if (fullVaultGrid) {
+        fullVaultGrid.innerHTML = '';
+        if (!isVaultAccessible) {
+          fullVaultGrid.innerHTML = `
+            <div class="col-span-3 text-center py-6 text-gray-500 text-xs italic bg-[#12131c] rounded-xl border border-white/5">
+              <i class="fa-solid fa-lock text-sm mb-1 block text-amber-500/60"></i>
+              This collector's full vault is set to ${visibility === 'FRIENDS' ? 'Friends Only' : 'Private'}.
+            </div>
+          `;
+        } else if (userFullVault.length === 0) {
+          fullVaultGrid.innerHTML = `<span class="col-span-3 text-xs text-gray-500 italic py-4 text-center">No additional lighters currently in vault.</span>`;
+        } else {
+          userFullVault.forEach(l => {
+            const tile = document.createElement('div');
+            tile.className = "bg-[#161822] rounded-xl p-2 border border-white/10 text-left cursor-pointer active:scale-95 transition hover:border-purple-500/40 relative";
+            tile.onclick = () => { closePublicPassportModal(); openInspectionWindow(l.id, true); };
+            tile.innerHTML = `
+              <div class="relative aspect-square rounded-lg bg-black/40 overflow-hidden mb-1.5">
+                <img src="${l.frontImg}" class="w-full h-full object-cover">
+                <span class="absolute top-1 left-1 bg-black/80 text-[8px] font-bold text-amber-400 px-1 rounded">${l.tier}</span>
+                ${l.isListed ? `<span class="absolute bottom-1 right-1 bg-emerald-500 text-black text-[7px] font-bold px-1 rounded">For Sale</span>` : ''}
+              </div>
+              <h5 class="text-[10px] font-bold text-gray-200 truncate">${l.name}</h5>
+              <div class="flex items-center justify-between text-[9px] mt-0.5">
+                <span class="font-mono text-gray-400">${l.modelNumber ? '#' + l.modelNumber : l.year}</span>
+                <span class="font-bold text-emerald-400">$${Number(l.price).toFixed(0)}</span>
+              </div>
+            `;
+            fullVaultGrid.appendChild(tile);
+          });
+        }
+      }
+
+      if (friendBtn) {
+        friendBtn.onclick = () => sendFriendRequest(userId);
+        friendBtn.innerHTML = isFriend ? '<i class="fa-solid fa-check"></i> Friends' : '<i class="fa-solid fa-user-plus"></i> Add Friend';
+      }
+      if (vouchBtn) vouchBtn.onclick = () => vouchCollector(userId);
+
+      if (isMe) {
+        if (friendBtn) friendBtn.classList.add('hidden');
+        if (vouchBtn) vouchBtn.classList.add('hidden');
+      } else {
+        if (friendBtn) friendBtn.classList.remove('hidden');
+        if (vouchBtn) vouchBtn.classList.remove('hidden');
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePublicPassportModal() { 
+      const el = document.getElementById('publicPassportModal');
+      if (el) el.classList.add('hidden'); 
+    }
+
+    async function sendFriendRequest(friendId) {
+      if (!currentUser) return toggleAuthModal();
+      const { error } = await supabaseClient.from('friendships').insert([{ user_id: currentUser.id, friend_id: friendId, status: 'ACCEPTED' }]);
+      if (error) alert("Friend relation exists or error: " + error.message);
+      else alert("Friend added to your circle!");
+      loadAppData();
+    }
+
+    async function vouchCollector(targetUserId) {
+      if (!currentUser) return toggleAuthModal();
+      const { error } = await supabaseClient.from('collector_vouches').insert([{ vouched_user_id: targetUserId, voucher_id: currentUser.id }]);
+      if (error) alert("You already vouched for this collector!");
+      else alert("Vouch submitted! You endorsed this collector's authenticity.");
+      loadAppData();
+    }
+
+    async function sparkLighter(lighterId) {
+      if (!currentUser) return toggleAuthModal();
+      const { error } = await supabaseClient.from('lighter_sparks').insert([{ lighter_id: lighterId, user_id: currentUser.id }]);
+      if (error) {
+        await supabaseClient.from('lighter_sparks').delete().match({ lighter_id: lighterId, user_id: currentUser.id });
+      }
+      loadAppData();
+    }
+
+    function copyPassportLink() {
+      const handle = (userProfile && userProfile.username) || 'collector';
+      const link = `${window.location.origin}${window.location.pathname}#@${handle}`;
+      navigator.clipboard.writeText(link);
+      alert(`Copied your FlameVault Passport link to clipboard:\n${link}`);
     }
 
     function openTradeProposal(targetItem) {
@@ -2263,7 +2450,6 @@ Respond in raw JSON:
       return supabaseClient.storage.from('zippo-images').getPublicUrl(safe).data.publicUrl;
     }
 
-    // Resilient, Bulletproof AI Scanner Function
     async function runAiIdentification() {
       const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) return alert("Configure your Gemini API Key in Settings first.");
