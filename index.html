@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ZippoVault</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { background-color: #0d0e15; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -21,9 +22,14 @@
         <i class="fa-solid fa-fire text-amber-500 text-lg"></i>
         <h1 class="text-xl font-bold tracking-tight text-white">ZippoVault</h1>
       </div>
-      <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white p-2">
-        <i class="fa-solid fa-gear text-lg"></i>
-      </button>
+      <div class="flex items-center gap-2">
+        <span id="syncIndicator" class="text-[10px] text-gray-500 flex items-center gap-1">
+          <i class="fa-solid fa-circle text-[8px] text-amber-500"></i> Local
+        </span>
+        <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white p-1">
+          <i class="fa-solid fa-gear text-lg"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Search & Filter Controls -->
@@ -52,7 +58,7 @@
     </div>
   </main>
 
-  <!-- Sticky Batch Action Tray -->
+  <!-- Sticky Batch Tray -->
   <aside id="batchTray" class="fixed bottom-16 inset-x-0 bg-[#161822] border-t border-white/10 p-3 flex items-center justify-between z-20">
     <div class="flex items-center gap-2">
       <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="w-4 h-4 rounded accent-amber-500">
@@ -67,9 +73,9 @@
 
   <!-- Bottom Navigation -->
   <nav class="fixed bottom-0 inset-x-0 h-16 bottom-nav flex items-center justify-around z-30 px-2">
-    <button class="flex flex-col items-center text-gray-400 hover:text-white">
-      <i class="fa-solid fa-chart-pie text-sm"></i>
-      <span class="text-[10px] mt-1">Stats</span>
+    <button onclick="loadFromSupabase()" class="flex flex-col items-center text-gray-400 hover:text-white">
+      <i class="fa-solid fa-rotate text-sm"></i>
+      <span class="text-[10px] mt-1">Cloud Sync</span>
     </button>
     <button class="flex flex-col items-center text-amber-500 font-semibold">
       <i class="fa-solid fa-boxes-stacked text-sm"></i>
@@ -88,13 +94,13 @@
     </button>
   </nav>
 
-  <!-- Lighter Detail Modal (Pop-up on Card Tap) -->
+  <!-- Inspection Modal -->
   <div id="detailModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col space-y-4">
       <div class="flex items-center justify-between pb-2 border-b border-white/10">
         <div>
-          <span id="modalTierBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 uppercase">COTY</span>
-          <h2 id="modalTitle" class="text-base font-bold text-white mt-1">Zippo Model</h2>
+          <span id="modalTierBadge" class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 uppercase">STANDARD</span>
+          <h2 id="modalTitle" class="text-base font-bold text-white mt-1">Zippo Name</h2>
           <p id="modalModelNum" class="text-xs text-amber-400/90 font-mono"></p>
         </div>
         <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -110,7 +116,6 @@
         </div>
       </div>
 
-      <!-- Quick Metrics -->
       <div class="grid grid-cols-2 gap-2 bg-[#12131c] p-3 rounded-lg border border-white/5">
         <div>
           <span class="text-[10px] text-gray-400 uppercase tracking-wider block">Estimated Value</span>
@@ -122,7 +127,6 @@
         </div>
       </div>
 
-      <!-- Stamp Breakdown Section -->
       <div class="bg-[#12131c] p-3 rounded-lg border border-white/5">
         <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
           <i class="fa-solid fa-calendar-check"></i> Stamp & Date Breakdown
@@ -130,7 +134,6 @@
         <p id="modalStampDetails" class="text-xs text-gray-300 leading-relaxed"></p>
       </div>
 
-      <!-- Design & Catalog Specifications -->
       <div class="bg-[#12131c] p-3 rounded-lg border border-white/5 space-y-2">
         <h4 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
           <i class="fa-solid fa-circle-info"></i> Design Elements & Specs
@@ -140,7 +143,7 @@
           <p id="modalFinish" class="text-xs text-gray-300"></p>
         </div>
         <div>
-          <span class="text-[10px] text-gray-400 uppercase block">Artwork Technique:</span>
+          <span class="text-[10px] text-gray-400 uppercase block">Artwork Details:</span>
           <p id="modalArtwork" class="text-xs text-gray-300"></p>
         </div>
       </div>
@@ -151,7 +154,7 @@
     </div>
   </div>
 
-  <!-- AI Scanner / Add Modal -->
+  <!-- Scan Modal -->
   <div id="scanModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-[#191b26] rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-4 border border-white/10 flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
@@ -161,15 +164,14 @@
         <button onclick="closeScanModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
-      <!-- Upload Zone -->
       <div class="grid grid-cols-2 gap-2 my-4">
         <div>
-          <label class="block text-[11px] text-gray-400 mb-1">1. Lighter Front Face</label>
-          <input type="file" id="frontPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
+          <label class="block text-[11px] text-gray-400 mb-1">1. Front Face *</label>
+          <input type="file" id="frontPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
         </div>
         <div>
-          <label class="block text-[11px] text-gray-400 mb-1">2. Bottom Stamp (Macro)</label>
-          <input type="file" id="stampPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
+          <label class="block text-[11px] text-amber-400 mb-1">2. Bottom Stamp *</label>
+          <input type="file" id="stampPhotoInput" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:bg-gray-800 file:text-gray-200">
         </div>
       </div>
 
@@ -177,38 +179,37 @@
         <span>Identify with AI</span>
       </button>
 
-      <!-- Extracted Fields Review Form -->
       <div class="mt-4 space-y-3 pt-3 border-t border-white/10">
         <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Official Model Name</label>
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Official Model / Name</label>
           <input type="text" id="formModel" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Model Number</label>
+            <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Catalog / Model #</label>
             <input type="text" id="formModelNum" placeholder="e.g. 48247" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
           </div>
           <div>
             <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Category Tier</label>
             <select id="formTier" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+              <option value="STANDARD">Standard</option>
               <option value="COTY">COTY</option>
               <option value="ARMOR">Armor</option>
               <option value="VINTAGE">Vintage</option>
-              <option value="STANDARD">Standard</option>
             </select>
           </div>
         </div>
         <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Stamp Decoding</label>
-          <input type="text" id="formStampDetails" placeholder="e.g. Manufactured in January 2023 (Stamp: A 23)" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Date & Bottom Stamp Decoding</label>
+          <textarea id="formStampDetails" rows="2" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1"></textarea>
         </div>
         <div>
-          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Finish & Material</label>
-          <input type="text" id="formFinish" placeholder="e.g. Translucent Black Ice coating over brass" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+          <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Finish & Case Material</label>
+          <input type="text" id="formFinish" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
         </div>
         <div>
           <label class="block text-[10px] text-gray-400 uppercase tracking-wider">Artwork Details</label>
-          <input type="text" id="formArtwork" placeholder="e.g. Laser-engraved silver geometric lines" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
+          <input type="text" id="formArtwork" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10 mt-1">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -223,67 +224,111 @@
             <input type="number" id="formPrice" class="w-full bg-[#12131c] text-xs text-emerald-400 font-bold p-2 rounded border border-white/10 mt-1">
           </div>
         </div>
-        <button onclick="saveLighterToVault()" class="w-full py-2.5 bg-emerald-500 text-black font-bold text-xs rounded-lg mt-2">
+        <button id="saveVaultBtn" onclick="saveLighterToVault()" class="w-full py-2.5 bg-emerald-500 text-black font-bold text-xs rounded-lg mt-2">
           Add to Vault
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal (Supabase + Gemini) -->
   <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#191b26] rounded-2xl w-full max-w-sm p-4 border border-white/10 space-y-4">
       <div class="flex items-center justify-between border-b border-white/10 pb-2">
-        <h3 class="text-sm font-bold text-white">App Settings</h3>
+        <h3 class="text-sm font-bold text-white">Cloud & API Config</h3>
         <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="block text-xs text-gray-400 mb-1">Gemini Vision API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
-        <p class="text-[10px] text-gray-500 mt-1">Saved locally to your phone's browser.</p>
+        <label class="block text-xs text-gray-400 mb-1">Supabase Project URL</label>
+        <input type="text" id="sbUrlInput" placeholder="https://xyz.supabase.co" class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
       </div>
-      <button onclick="saveApiKey()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Key</button>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Supabase Anon Key</label>
+        <input type="password" id="sbKeyInput" placeholder="eyJhbGci..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full bg-[#12131c] text-xs text-white p-2 rounded border border-white/10">
+      </div>
+      <button onclick="saveAllSettings()" class="w-full py-2 bg-amber-500 text-black text-xs font-semibold rounded">Save Credentials</button>
     </div>
   </div>
 
   <script>
-    const defaultData = [
-      {
-        id: "1",
-        name: "Art Deco Black Ice Windproof",
-        modelNumber: "48247",
-        tier: "STANDARD",
-        year: "2023",
-        price: 36.00,
-        condition: "Loose / Fired",
-        stampDetails: "Manufactured in January 2023. Letter A (Left) = January. Number 23 (Right) = 2023.",
-        finish: "Signature translucent Black Ice coating over durable brass case.",
-        artwork: "Laser-engraved silver geometric lines with vintage Art Deco typography.",
-        frontImg: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80",
-        stampImg: null
-      },
-      {
-        id: "2",
-        name: "2018 Golden Scroll COTY",
-        modelNumber: "29653",
-        tier: "COTY",
-        year: "2018",
-        price: 115.00,
-        condition: "Loose / Fired",
-        stampDetails: "Manufactured in February 2018 (B 18). Limited to 12,000 consecutively numbered units.",
-        finish: "Armor Gold Plate with gold-plated internal mechanism.",
-        artwork: "360-degree MultiCut deep-carve floral scrollwork with diagonal banding.",
-        frontImg: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=300&q=80",
-        stampImg: null
-      }
-    ];
-
-    let collection = JSON.parse(localStorage.getItem('zippo_vault')) || defaultData;
+    let supabaseClient = null;
+    let collection = [];
     let selectedIds = new Set();
 
-    function saveState() {
-      localStorage.setItem('zippo_vault', JSON.stringify(collection));
+    function initSupabase() {
+      const url = localStorage.getItem('sb_url');
+      const key = localStorage.getItem('sb_key');
+      const indicator = document.getElementById('syncIndicator');
+
+      if (url && key) {
+        try {
+          supabaseClient = window.supabase.createClient(url, key);
+          indicator.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-emerald-400"></i> Cloud Connected';
+          loadFromSupabase();
+          return;
+        } catch (e) {
+          console.error("Supabase init error", e);
+        }
+      }
+      indicator.innerHTML = '<i class="fa-solid fa-circle text-[8px] text-amber-500"></i> Local Only';
+      collection = JSON.parse(localStorage.getItem('zippo_vault_offline')) || [];
       renderCollection();
+    }
+
+    async function loadFromSupabase() {
+      if (!supabaseClient) return;
+      const { data, error } = await supabaseClient
+        .from('lighters')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Fetch error:", error);
+        return;
+      }
+
+      collection = data.map(row => ({
+        id: row.id,
+        name: row.name,
+        modelNumber: row.model_number,
+        year: row.year,
+        tier: row.tier,
+        stampDetails: row.stamp_details,
+        finish: row.finish,
+        artwork: row.artwork,
+        condition: row.condition,
+        price: Number(row.price),
+        frontImg: row.front_img,
+        stampImg: row.stamp_img
+      }));
+
+      localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+      renderCollection();
+    }
+
+    async function uploadImageToSupabase(file, prefix = 'lighter') {
+      if (!supabaseClient || !file) return null;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('zippo-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (error) {
+        console.error("Upload error:", error);
+        throw error;
+      }
+
+      const { data: publicData } = supabaseClient.storage
+        .from('zippo-images')
+        .getPublicUrl(fileName);
+
+      return publicData.publicUrl;
     }
 
     function renderCollection() {
@@ -293,7 +338,7 @@
 
       grid.innerHTML = '';
       const filtered = collection.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(search) || 
+        const matchesSearch = (item.name || '').toLowerCase().includes(search) || 
                               (item.modelNumber && item.modelNumber.toLowerCase().includes(search)) ||
                               (item.year && item.year.includes(search));
         const matchesTier = (filter === 'ALL') || (item.tier === filter);
@@ -310,18 +355,22 @@
         const isChecked = selectedIds.has(item.id);
         const card = document.createElement('div');
         card.className = "card-surface rounded-xl p-2 flex flex-col justify-between relative cursor-pointer active:scale-95 transition-transform";
-        card.onclick = (e) => {
-          if (e.target.type !== 'checkbox') openDetailModal(item.id);
-        };
+        
+        card.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') openDetailModal(item.id);
+        });
+
+        const displayImg = item.frontImg || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+
         card.innerHTML = `
           <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-black/40 mb-2">
             <span class="absolute top-1 left-1 bg-black/70 backdrop-blur text-[9px] font-bold text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/20">${item.tier}</span>
-            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
-            <img src="${item.frontImg}" alt="${item.name}" class="w-full h-full object-cover">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${item.id}')" class="absolute top-1 right-1 w-3.5 h-3.5 rounded accent-amber-500">
+            <img src="${displayImg}" alt="${item.name}" class="w-full h-full object-cover pointer-events-none">
           </div>
           <div>
             <h3 class="text-[11px] font-bold text-gray-100 truncate">${item.name}</h3>
-            <p class="text-[9px] text-amber-400/80">${item.modelNumber ? '#' + item.modelNumber : item.year}</p>
+            <p class="text-[9px] text-amber-400/80">${item.modelNumber ? '#' + item.modelNumber : (item.year || '')}</p>
             <p class="text-xs font-extrabold text-emerald-400 mt-0.5">$${Number(item.price).toFixed(2)}</p>
           </div>
         `;
@@ -332,7 +381,7 @@
     }
 
     function openDetailModal(id) {
-      const item = collection.find(i => i.id === id);
+      const item = collection.find(i => String(i.id) === String(id));
       if (!item) return;
 
       document.getElementById('modalTitle').innerText = item.name;
@@ -341,9 +390,9 @@
       document.getElementById('modalPrice').innerText = `$${Number(item.price).toFixed(2)}`;
       document.getElementById('modalCondition').innerText = item.condition || 'Loose / Fired';
       document.getElementById('modalStampDetails').innerText = item.stampDetails || 'No stamp details recorded.';
-      document.getElementById('modalFinish').innerText = item.finish || 'Standard Zippo brass construction.';
+      document.getElementById('modalFinish').innerText = item.finish || 'Standard Zippo casing.';
       document.getElementById('modalArtwork').innerText = item.artwork || 'Standard factory finish.';
-      document.getElementById('modalFrontImg').src = item.frontImg;
+      document.getElementById('modalFrontImg').src = item.frontImg || '';
 
       const stampImgEl = document.getElementById('modalStampImg');
       const placeholder = document.getElementById('noStampPlaceholder');
@@ -382,19 +431,29 @@
     function updateBatchTray() {
       document.getElementById('selectCount').innerText = `Select All (${selectedIds.size})`;
       const total = Array.from(selectedIds).reduce((sum, id) => {
-        const found = collection.find(i => i.id === id);
+        const found = collection.find(i => String(i.id) === String(id));
         return sum + (found ? Number(found.price) : 0);
       }, 0);
       document.getElementById('selectedTotal').innerText = `Total: $${total.toFixed(2)}`;
     }
 
-    function deleteSelected() {
+    async function deleteSelected() {
       if (selectedIds.size === 0) return;
-      if (confirm(`Remove ${selectedIds.size} lighter(s) from vault?`)) {
-        collection = collection.filter(item => !selectedIds.has(item.id));
-        selectedIds.clear();
-        saveState();
+      if (!confirm(`Remove ${selectedIds.size} lighter(s) from vault?`)) return;
+
+      if (supabaseClient) {
+        const idsToDelete = Array.from(selectedIds);
+        const { error } = await supabaseClient
+          .from('lighters')
+          .delete()
+          .in('id', idsToDelete);
+        if (error) alert("Error deleting from cloud: " + error.message);
       }
+
+      collection = collection.filter(item => !selectedIds.has(item.id));
+      selectedIds.clear();
+      localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+      renderCollection();
     }
 
     function exportJSON() {
@@ -402,28 +461,35 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `zippo_vault_export_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `zippo_vault_${new Date().toISOString().slice(0,10)}.json`;
       a.click();
     }
 
     function openScanModal() { document.getElementById('scanModal').classList.remove('hidden'); }
     function closeScanModal() { document.getElementById('scanModal').classList.add('hidden'); }
+    
     function toggleSettingsModal() { 
       document.getElementById('settingsModal').classList.toggle('hidden');
-      const savedKey = localStorage.getItem('gemini_api_key');
-      if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
+      document.getElementById('sbUrlInput').value = localStorage.getItem('sb_url') || '';
+      document.getElementById('sbKeyInput').value = localStorage.getItem('sb_key') || '';
+      document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key_vault') || '';
     }
 
-    function saveApiKey() {
-      const key = document.getElementById('apiKeyInput').value.trim();
-      if (key) {
-        localStorage.setItem('gemini_api_key', key);
-        alert('API Key Saved!');
-        toggleSettingsModal();
-      }
+    function saveAllSettings() {
+      const sbUrl = document.getElementById('sbUrlInput').value.trim();
+      const sbKey = document.getElementById('sbKeyInput').value.trim();
+      const gemKey = document.getElementById('apiKeyInput').value.trim();
+
+      if (sbUrl) localStorage.setItem('sb_url', sbUrl);
+      if (sbKey) localStorage.setItem('sb_key', sbKey);
+      if (gemKey) localStorage.setItem('gemini_api_key_vault', gemKey);
+
+      alert("Settings saved!");
+      toggleSettingsModal();
+      initSupabase();
     }
 
-    async function compressImage(file, maxDimension = 1024) {
+    async function compressImageForAI(file, maxDimension = 1400) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = reject;
@@ -449,7 +515,7 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+            resolve(canvas.toDataURL('image/jpeg', 0.88).split(',')[1]);
           };
           img.src = reader.result;
         };
@@ -457,11 +523,11 @@
       });
     }
 
-    // Dual-Image AI Vision Analyzer
+    // AI Dual-Image Analyzer
     async function runAiIdentification() {
-      const apiKey = (localStorage.getItem('gemini_api_key') || '').trim();
+      const apiKey = (localStorage.getItem('gemini_api_key_vault') || '').trim();
       if (!apiKey) {
-        alert("Please set your Gemini API key in Settings (Config) first.");
+        alert("Please set your Gemini API key in Config first.");
         toggleSettingsModal();
         return;
       }
@@ -469,8 +535,8 @@
       const frontFile = document.getElementById('frontPhotoInput').files[0];
       const stampFile = document.getElementById('stampPhotoInput').files[0];
 
-      if (!frontFile) {
-        alert("Please select at least the front photo of your Zippo.");
+      if (!frontFile && !stampFile) {
+        alert("Please select at least one photo (front face or bottom stamp).");
         return;
       }
 
@@ -480,33 +546,48 @@
 
       try {
         const parts = [];
-        const frontBase64 = await compressImage(frontFile);
-        parts.push({ inline_data: { mime_type: 'image/jpeg', data: frontBase64 } });
+        const systemInstruction = `You are a certified Zippo lighter appraiser and historian.
+Analyze the provided lighter image(s).
+
+ZIPPO DATE CODE DECODING RULES:
+- 2001 to Present: Left letter = Month (A=Jan, B=Feb, C=Mar, D=Apr, E=May, F=Jun, G=Jul, H=Aug, I=Sep, J=Oct, K=Nov, L=Dec). Right numbers = Last two digits of year (e.g., 23 = 2023, 18 = 2018).
+- 1986 to 2000: Left letter = Month (A..L). Right = Roman numerals (II = 1986, XVI = 2000).
+- 1958 to 1985: Dots and slashes flanking the Zippo logo.
+- Location: "BRADFORD, PA. MADE IN U.S.A."
+
+INSTRUCTIONS:
+1. Locate the month letter on the left and the two-digit year code on the right of the bottom stamp.
+2. Identify the official catalog model name, 5-digit SKU if known (e.g. 48247), finish type, and artwork technique.
+3. Respond STRICTLY in raw JSON format with no markdown, backticks, or other text.
+
+JSON FORMAT:
+{
+  "name": "Full Official Model Name",
+  "modelNumber": "5-digit catalog number or empty string",
+  "year": "Exact year (e.g. 2023)",
+  "tier": "COTY or ARMOR or VINTAGE or STANDARD",
+  "stampDetails": "Full explanation of stamp (e.g. Manufactured in January 2023. Letter A on left = January; 23 on right = 2023; Bradford, PA Made in U.S.A.)",
+  "finish": "Case finish and metal",
+  "artwork": "Artwork and engraving technique",
+  "condition": "Loose / Fired or Mint in Box",
+  "price": number
+}`;
+
+        parts.push({ text: systemInstruction });
+
+        if (frontFile) {
+          const frontBase64 = await compressImageForAI(frontFile);
+          parts.push({ text: "PHOTO 1 (Front Artwork / Face):" });
+          parts.push({ inline_data: { mime_type: 'image/jpeg', data: frontBase64 } });
+        }
 
         if (stampFile) {
-          const stampBase64 = await compressImage(stampFile);
+          const stampBase64 = await compressImageForAI(stampFile);
+          parts.push({ text: "PHOTO 2 (Bottom Stamp Close-up / Macro):" });
           parts.push({ inline_data: { mime_type: 'image/jpeg', data: stampBase64 } });
         }
 
-        const prompt = `You are a world-class Zippo lighter historian and authenticator.
-Analyze the provided image(s). Photo 1 is the front face artwork. If Photo 2 is present, it is the bottom stamp.
-Extract the detailed catalog and dating data. Respond STRICTLY in raw JSON format with no markdown, backticks, or explanation.
-Exact JSON structure:
-{
-  "name": "Full Official Model Name (e.g. Zippo Art Deco Design Black Ice Windproof Lighter)",
-  "modelNumber": "Official Zippo 5-digit catalog number if known, otherwise empty string",
-  "year": "Exact year manufactured (e.g. 2023)",
-  "tier": "COTY or ARMOR or VINTAGE or STANDARD",
-  "stampDetails": "Clear decoding of the stamp month letter (A=Jan..L=Dec) and year number (e.g. Manufactured in January 2023. Letter A represents January; 23 represents 2023; Bradford, PA Made in USA)",
-  "finish": "Detailed finish and casing description (e.g. Translucent Black Ice coating over durable brass case)",
-  "artwork": "Detailed description of artwork technique (e.g. Precisely laser-engraved silver geometric lines in Art Deco style)",
-  "condition": "Loose / Fired or Mint in Box",
-  "price": number (estimated fair secondary market value in USD as a plain number)
-}`;
-
-        parts.unshift({ text: prompt });
-
-        const candidateModels = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+        const candidateModels = ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-2.5-pro'];
         let success = false;
         let lastError = null;
 
@@ -546,7 +627,7 @@ Exact JSON structure:
           }
         }
 
-        if (!success) throw lastError || new Error("AI endpoints are temporarily busy. Please try again.");
+        if (!success) throw lastError || new Error("AI endpoints are busy. Please try again.");
 
       } catch (err) {
         alert(`AI scan error: ${err.message || 'Check connection or key'}`);
@@ -556,45 +637,88 @@ Exact JSON structure:
       }
     }
 
-    function saveLighterToVault() {
-      const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
-      const modelNumber = document.getElementById('formModelNum').value.trim();
-      const tier = document.getElementById('formTier').value;
-      const stampDetails = document.getElementById('formStampDetails').value.trim();
-      const finish = document.getElementById('formFinish').value.trim();
-      const artwork = document.getElementById('formArtwork').value.trim();
-      const condition = document.getElementById('formCondition').value;
-      const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
+    async function saveLighterToVault() {
+      const saveBtn = document.getElementById('saveVaultBtn');
+      saveBtn.innerText = "Uploading to Cloud...";
+      saveBtn.disabled = true;
 
-      const frontFile = document.getElementById('frontPhotoInput').files[0];
-      const stampFile = document.getElementById('stampPhotoInput').files[0];
+      try {
+        const name = document.getElementById('formModel').value.trim() || "Untitled Zippo";
+        const modelNumber = document.getElementById('formModelNum').value.trim();
+        const tier = document.getElementById('formTier').value;
+        const stampDetails = document.getElementById('formStampDetails').value.trim();
+        const finish = document.getElementById('formFinish').value.trim();
+        const artwork = document.getElementById('formArtwork').value.trim();
+        const condition = document.getElementById('formCondition').value;
+        const price = parseFloat(document.getElementById('formPrice').value) || 30.00;
 
-      const frontImg = frontFile ? URL.createObjectURL(frontFile) : "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
-      const stampImg = stampFile ? URL.createObjectURL(stampFile) : null;
+        let year = "Modern";
+        const yearMatch = stampDetails.match(/\b(19\d{2}|20\d{2})\b/);
+        if (yearMatch) year = yearMatch[1];
 
-      collection.unshift({
-        id: Date.now().toString(),
-        name,
-        modelNumber,
-        tier,
-        stampDetails,
-        finish,
-        artwork,
-        condition,
-        price,
-        frontImg,
-        stampImg
-      });
+        const frontFile = document.getElementById('frontPhotoInput').files[0];
+        const stampFile = document.getElementById('stampPhotoInput').files[0];
 
-      saveState();
-      closeScanModal();
+        let frontImgUrl = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300";
+        let stampImgUrl = null;
+
+        if (supabaseClient) {
+          if (frontFile) frontImgUrl = await uploadImageToSupabase(frontFile, 'front');
+          if (stampFile) stampImgUrl = await uploadImageToSupabase(stampFile, 'stamp');
+
+          const { error } = await supabaseClient.from('lighters').insert([{
+            name,
+            model_number: modelNumber,
+            year,
+            tier,
+            stamp_details: stampDetails,
+            finish,
+            artwork,
+            condition,
+            price,
+            front_img: frontImgUrl,
+            stamp_img: stampImgUrl
+          }]);
+
+          if (error) throw error;
+          await loadFromSupabase();
+        } else {
+          // Fallback offline
+          collection.unshift({
+            id: Date.now().toString(),
+            name,
+            modelNumber,
+            year,
+            tier,
+            stampDetails,
+            finish,
+            artwork,
+            condition,
+            price,
+            frontImg: frontImgUrl,
+            stampImg: stampImgUrl
+          });
+          localStorage.setItem('zippo_vault_offline', JSON.stringify(collection));
+          renderCollection();
+        }
+
+        closeScanModal();
+        document.getElementById('frontPhotoInput').value = "";
+        document.getElementById('stampPhotoInput').value = "";
+      } catch (err) {
+        alert("Failed to save to cloud: " + err.message);
+      } finally {
+        saveBtn.innerText = "Add to Vault";
+        saveBtn.disabled = false;
+      }
     }
 
     function openCOTYGuide() {
       alert("Annual Collectible of the Year (COTY) Drop Tracker:\n\n• Timing: Every February - April\n• Primary Channel: Zippo.com (Z-Connect members)\n• Secondary Allocation: Riley's 66 & Lucas Lighters\n• Target MSRP: $120 - $160");
     }
 
-    renderCollection();
+    // Startup
+    initSupabase();
   </script>
 </body>
 </html>
